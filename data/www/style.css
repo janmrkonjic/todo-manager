@@ -1,0 +1,339 @@
+body {
+    background-color: #fafafa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.task-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    font-size: 1.25rem;
+}
+
+.task-section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #202020;
+    margin-bottom: 10px;
+    margin-top: 30px;
+}
+
+.task-section-title:first-child {
+    margin-top: 0;
+}
+
+.task-count {
+    color: #808080;
+    font-weight: 400;
+    font-size: 1.1rem;
+    margin-left: 5px;
+}
+
+/* Task item */
+.task-item {
+    background: white;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+    cursor: pointer;
+    font-size: 1.15rem;
+}
+
+.task-item:hover {
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.task-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d1d1;
+    border-radius: 50%;
+    margin-right: 12px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.task-checkbox:hover {
+    border-color: #0d6efd;
+}
+
+.task-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-title {
+    font-size: 16px;
+    color: #202020;
+    margin: 0 0 4px 0;
+    font-weight: 400;
+}
+
+.task-description {
+    font-size: 14px;
+    color: #808080;
+    margin: 0;
+}
+
+.task-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.task-item:hover .task-actions {
+    opacity: 1;
+}
+
+.task-action-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    border-radius: 5px;
+    color: #808080;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.task-action-btn:hover {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+}
+
+.task-action-btn.delete:hover {
+    background-color: #fee;
+    color: #dc3545;
+}
+
+.add-task-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #808080;
+    border: none;
+    background: none;
+    padding: 8px 0;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.add-task-btn:hover {
+    color: #0d6efd;
+}
+
+.add-task-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal styles */
+.task-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    overflow-y: auto;
+}
+
+.task-modal.active {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 700px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.modal-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #808080;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: #e7f1ff;
+    color: #0d6efd;
+}
+
+.modal-task-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #202020;
+    margin-bottom: 12px;
+}
+
+.modal-task-description {
+    font-size: 14px;
+    color: #505050;
+    margin-bottom: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.modal-task-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 0;
+    font-size: 13px;
+    color: #808080;
+    padding-right: 40px; /* Prostor za close button */
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+/* Comments section */
+.comments-section {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 16px;
+}
+
+.comments-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #202020;
+    margin-bottom: 16px;
+}
+
+.comment-item {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #fafafa;
+    border-radius: 8px;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.comment-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #0d6efd;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.comment-author {
+    font-size: 13px;
+    font-weight: 600;
+    color: #202020;
+}
+
+.comment-date {
+    font-size: 12px;
+    color: #808080;
+}
+
+.comment-text {
+    font-size: 14px;
+    color: #202020;
+    line-height: 1.5;
+    margin-left: 36px;
+}
+
+/* Comment form */
+.comment-form {
+    margin-top: 16px;
+}
+
+.comment-input {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.comment-input:focus {
+    outline: none;
+    border-color: #0d6efd;
+}
+
+.comment-submit {
+    background: #0d6efd;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+}
+
+.comment-submit:hover {
+    background: #0b5ed7;
+}
+
+.comment-submit:active {
+    background: #0a58ca;
+}
+
+/* Navbar styling */
+.navbar-text {
+    display: flex;
+    align-items: center;
+}
+
+.navbar .nav-item {
+    display: flex;
+    align-items: center;
+}

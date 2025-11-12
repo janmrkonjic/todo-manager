@@ -1,13 +1,23 @@
 <?php
 // Middleware za preverjanje prijave uporabnika
 // Vključi to datoteko na začetku vsake zaščitene strani
-
-session_start();
+// POMEMBNO: session_start() mora biti klican PRED vključitvijo te datoteke!
 
 function preveri_prijavo() {
     if (!isset($_SESSION['uporabnik_id'])) {
         header("Location: prijava.php");
         exit;
+    }
+    
+    // Če je administrator, preusmeri na administracijo (razen če je že tam ali na uporabniki.php)
+    if (isset($_SESSION['vloga_id']) && $_SESSION['vloga_id'] == 1) {
+        $current_page = basename($_SERVER['PHP_SELF']);
+        $allowed_pages = ['administracija.php', 'uporabniki.php', 'odjava.php'];
+        
+        if (!in_array($current_page, $allowed_pages)) {
+            header("Location: administracija.php");
+            exit;
+        }
     }
 }
 

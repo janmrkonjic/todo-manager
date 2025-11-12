@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'preveri_prijavo.php';
 preveri_prijavo();
 
@@ -25,8 +26,17 @@ try {
         $status = $_POST['status'];
         
         if (!empty($naslov)) {
+            // Vstavi nalogo
             $stmt = $pdo->prepare("INSERT INTO Naloga (naslov, opis, rok_izvedbe, datum_ustvarjenja, status) VALUES (?, ?, ?, NOW(), ?)");
             $stmt->execute([$naslov, $opis, $rok, $status]);
+            
+            // Pridobi ID novo ustvarjene naloge
+            $naloga_id = $pdo->lastInsertId();
+            
+            // Dodeli nalogo trenutnemu uporabniku v DodelitevNaloge
+            $stmt = $pdo->prepare("INSERT INTO DodelitevNaloge (datum_dodelitve, naloga_id, uporabnik_id, skupina_id) VALUES (NOW(), ?, ?, NULL)");
+            $stmt->execute([$naloga_id, $_SESSION['uporabnik_id']]);
+            
             header("Location: urejanje.php");
             exit;
         }
@@ -72,28 +82,41 @@ try {
     <title>Upravljanje nalog - Todo Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
 </head>
-    <!-- Navbar -->
+<body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="index.php">Todo Manager</a>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.php">
+                <i class="bi bi-check2-circle"></i> Todo Manager
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php">
+                            <i class="bi bi-house-door"></i> Domov
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="urejanje.php">
+                            <i class="bi bi-pencil-square"></i> Upravljanje nalog
+                        </a>
+                    </li>
+                    <?php if ($_SESSION['vloga_id'] != 1): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="skupine.php">
+                            <i class="bi bi-people"></i> Moje skupine
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.php">Domov</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="urejanje.php">Upravljanje nalog</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
                         <span class="navbar-text text-white me-3">
-                            <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
-                            <small class="text-white-50">(<?= htmlspecialchars($_SESSION['vloga_naziv']) ?>)</small>
+                                                    <i class="bi bi-person-circle" style="margin-right: 8px;"></i><?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
                         </span>
                     </li>
                     <li class="nav-item">
@@ -151,53 +174,6 @@ try {
                         <a href="urejanje.php" class="btn btn-secondary">Prekliči</a>
                     <?php endif; ?>
                 </form>
-            </div>
-        </div>
-        
-        <!-- Prikaz vseh nalog -->
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Seznam nalog (<?= count($naloge) ?>)</h5>
-                <?php if (empty($naloge)): ?>
-                    <p class="text-muted">Ni nalog.</p>
-                <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Naslov</th>
-                                    <th>Opis</th>
-                                    <th>Rok</th>
-                                    <th>Status</th>
-                                    <th>Akcije</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($naloge as $naloga): ?>
-                                    <tr>
-                                        <td><?= $naloga['id'] ?></td>
-                                        <td><strong><?= htmlspecialchars($naloga['naslov']) ?></strong></td>
-                                        <td><?= htmlspecialchars($naloga['opis']) ?></td>
-                                        <td><?= $naloga['rok_izvedbe'] ? date('d.m.Y H:i', strtotime($naloga['rok_izvedbe'])) : '-' ?></td>
-                                        <td>
-                                            <?php if ($naloga['status'] === 'opravljeno'): ?>
-                                                <span class="badge bg-success">Opravljeno</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-warning text-dark">Neopravljeno</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <a href="?edit=<?= $naloga['id'] ?>" class="btn btn-sm btn-primary">Uredi</a>
-                                            <a href="?delete=<?= $naloga['id'] ?>" class="btn btn-sm btn-danger" 
-                                               onclick="return confirm('Ste prepričani?')">Briši</a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php endif; ?>
             </div>
         </div>
     </div>
