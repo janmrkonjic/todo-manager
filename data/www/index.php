@@ -1,4 +1,7 @@
 <?php
+require_once 'preveri_prijavo.php';
+preveri_prijavo();
+
 try {
     $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
     $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
@@ -30,8 +33,9 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Domov - Todo Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 </head>
-<body>
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="index.php">Todo Manager</a>
@@ -45,6 +49,19 @@ try {
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="urejanje.php">Upravljanje nalog</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text text-white me-3">
+                            <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
+                            <small class="text-white-50">(<?= htmlspecialchars($_SESSION['vloga_naziv']) ?>)</small>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="odjava.php">
+                            <i class="bi bi-box-arrow-right"></i> Odjava
+                        </a>
                     </li>
                 </ul>
             </div>
