@@ -1,0 +1,9 @@
+data/mysql/
+data/www/vendor/
+data/www/priloge/
+data/www/uploads/
+data/www/slike/
+.env
+*.log
+.DS_Store
+Thumbs.db

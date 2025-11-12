@@ -1,0 +1,43 @@
+USE todo_manager;
+
+INSERT INTO Vloga (naziv) VALUES
+('Administrator'),
+('Vodja skupine'),
+('Član skupine'),
+('Samostojni uporabnik');
+
+INSERT INTO Uporabnik (uporabnisko_ime, email, geslo, datum_registracije, vloga_id) VALUES
+('admin', 'admin@gmail.com', 'admin123', '2025-01-10 09:30:00', 1),
+('marko', 'marko.kovac@gmail.com', 'geslo123', '2025-01-12 14:00:00', 2),
+('ana', 'ana.novak@gmail.com', 'geslo123', '2025-01-15 10:00:00', 3),
+('tina', 'tina.zupan@gmail.com', 'geslo123', '2025-01-18 08:45:00', 3),
+('nejc', 'nejc.horvat@gmail.com', 'geslo123', '2025-01-20 13:30:00', 4),
+('sara', 'sara.kos@gmail.com', 'geslo123', '2025-01-22 09:15:00', 3);
+
+INSERT INTO Skupina (ime, datum_ustvarjenja) VALUES
+('Razvojna ekipa', '2025-01-25 12:00:00'),
+('Marketing ekipa', '2025-01-26 09:00:00'),
+('Podpora uporabnikom', '2025-01-27 11:15:00');
+
+INSERT INTO ClaniSkupine (datum_prikljucitve, uporabnik_id, skupina_id) VALUES
+('2025-01-25 13:00:00', 2, 1), -- Marko vodi Razvojno ekipo
+('2025-01-26 08:00:00', 3, 1), -- Ana v Razvojni ekipi
+('2025-01-26 08:10:00', 4, 1), -- Tina v Razvojni ekipi
+('2025-01-27 12:00:00', 6, 2), -- Sara v Marketing ekipi
+('2025-01-28 10:00:00', 5, 3); -- Nejc v Podpori uporabnikom
+
+INSERT INTO Naloga (naslov, opis, rok_izvedbe, datum_ustvarjenja, status, datum_zakljucka) VALUES
+('Priprava baze podatkov', 'Ustvari osnovno strukturo baze za aplikacijo', '2025-02-01 18:00:00', '2025-01-25 14:00:00', 'opravljeno', '2025-01-31 16:00:00'),
+('Razvoj prijavnega sistema', 'Implementacija prijave in registracije uporabnikov', '2025-02-05 20:00:00', '2025-01-27 10:00:00', 'neopravljeno', NULL),
+('Načrt oglaševalske kampanje', 'Ustvari načrt za oglaševanje aplikacije', '2025-02-10 17:00:00', '2025-01-29 09:30:00', 'neopravljeno', NULL),
+('Podpora uporabnikom', 'Reševanje prijav in tehničnih težav', '2025-02-08 16:00:00', '2025-01-30 11:00:00', 'opravljeno', '2025-02-07 15:00:00'),
+('Optimizacija kode', 'Pregled in izboljšanje obstoječe kode', '2025-02-12 19:00:00', '2025-01-30 14:00:00', 'neopravljeno', NULL),
+('Urejanje dokumentacije', 'Dopolni tehnično dokumentacijo projekta', '2025-02-09 12:00:00', '2025-01-28 08:00:00', 'neopravljeno', NULL);
+
+INSERT INTO DodelitevNaloge (datum_dodelitve, naloga_id, uporabnik_id, skupina_id) VALUES
+('2025-01-25 15:00:00', 1, NULL, 1), -- Naloga za skupino Razvojna ekipa
+('2025-01-27 10:15:00', 2, 2, NULL), -- Naloga za Marka (vodja)
+('2025-01-29 10:00:00', 3, NULL, 2), -- Naloga za Marketing ekipo
+('2025-01-30 11:30:00', 4, 5, NULL), -- Naloga za Nejca (Podpora uporabnikom)
+('2025-01-31 09:00:00', 5, 3, NULL), -- Naloga za Ano (član razvojne skupine)
+('2025-02-01 08:30:00', 6, NULL, 1); -- Naloga za Razvojno ekipo

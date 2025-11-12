@@ -1,0 +1,11 @@
+To-Do Manager:
+- Aplikacija omogoča uporabnikom, da enostavno upravljajo svoje vsakodnevne naloge.
+- Možnost, da imajo uporabniki skupen to-do list (skupine z vodjo in podrejenimi)
+- Uporabniki se lahko registrirajo in prijavijo v sistem.
+- Vsak uporabnik lahko dodaja, ureja in briše svoje naloge.
+- Naloge vsebujejo naslov, opis, rok izvedbe in status (opravljeno/neopravljeno).
+- Možnost iskanja in razvrščanja nalog po datumu ali statusu.
+- Prikaz statistike opravljenih nalog z uporabo grafov (Chart.js).
+- Naloge se osvežujejo dinamično z uporabo AJAX-a (brez ponovnega nalaganja strani).
+- Posiljanje emailov uporabnikom za neopravljene naloge
+- Povezava z bazo MySQL preko PDO za varno in učinkovito delo s podatki.
