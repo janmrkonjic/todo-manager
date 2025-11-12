@@ -126,6 +126,11 @@ try {
                             <i class="bi bi-pencil-square"></i> Upravljanje nalog
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="opravljene.php">
+                            <i class="bi bi-check-circle"></i> Opravljene naloge
+                        </a>
+                    </li>
                     <?php if ($_SESSION['vloga_id'] != 1): ?>
                     <li class="nav-item">
                         <a class="nav-link active" href="skupine.php">
@@ -238,12 +243,9 @@ try {
                     <div class="row">
                         <?php foreach ($skupine_clan as $skupina): ?>
                             <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="card h-100 border-info" style="border-left: 5px solid <?php echo htmlspecialchars($skupina['barva'] ?? '#17a2b8'); ?> !important;">
+                                <div class="card h-100 border-info position-relative" style="border-left: 5px solid <?php echo htmlspecialchars($skupina['barva'] ?? '#17a2b8'); ?> !important;">
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            <span class="badge me-2" style="background-color: <?php echo htmlspecialchars($skupina['barva'] ?? '#17a2b8'); ?>;">
-                                                <i class="bi bi-circle-fill"></i>
-                                            </span>
                                             <i class="bi bi-people-fill"></i> <?php echo htmlspecialchars($skupina['ime']); ?>
                                         </h5>
                                         <p class="card-text">
@@ -263,7 +265,9 @@ try {
                                             </span>
                                         </div>
                                         <a href="skupina_detail.php?id=<?php echo $skupina['id']; ?>" class="btn btn-sm btn-info w-100">
-                                            <i class="bi bi-arrow-right-circle"></i> Odpri skupino
+                                            <span class="text-white">
+                                                <i class="bi bi-arrow-right-circle"></i> Odpri skupino
+                                            </span>
                                         </a>
                                     </div>
                                 </div>
@@ -288,7 +292,6 @@ try {
                         <div class="mb-3">
                             <label for="ime_skupine" class="form-label">Ime skupine *</label>
                             <input type="text" class="form-control" id="ime_skupine" name="ime_skupine" required maxlength="100">
-                            <div class="form-text">Vnesite ime za vašo novo skupino (npr. "Projektna ekipa", "Razvojalci").</div>
                         </div>
                         <div class="mb-3">
                             <label for="barva" class="form-label">Barva skupine *</label>

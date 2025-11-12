@@ -105,6 +105,11 @@ try {
                             <i class="bi bi-pencil-square"></i> Upravljanje nalog
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="opravljene.php">
+                            <i class="bi bi-check-circle"></i> Opravljene naloge
+                        </a>
+                    </li>
                     <?php if ($_SESSION['vloga_id'] != 1): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="skupine.php">

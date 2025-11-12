@@ -18,6 +18,15 @@ try {
         exit;
     }
     
+    // Označevanje naloge kot opravljeno
+    if (isset($_GET['complete'])) {
+        $id = (int)$_GET['complete'];
+        $stmt = $pdo->prepare("UPDATE Naloga SET status = 'opravljeno', datum_zakljucka = NOW() WHERE id = ?");
+        $stmt->execute([$id]);
+        header("Location: index.php");
+        exit;
+    }
+    
     // Dodajanje komentarja
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dodaj_komentar'])) {
         $naloga_id = (int)$_POST['naloga_id'];
@@ -143,6 +152,11 @@ try {
                             <i class="bi bi-pencil-square"></i> Upravljanje nalog
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="opravljene.php">
+                            <i class="bi bi-check-circle"></i> Opravljene naloge
+                        </a>
+                    </li>
                     <?php if ($_SESSION['vloga_id'] != 1): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="skupine.php">
@@ -174,8 +188,8 @@ try {
                 Danes <span class="task-count"><?= count($naloge_danes) ?> <?= count($naloge_danes) == 1 ? 'naloga' : 'naloge' ?></span>
             </div>
             <?php foreach ($naloge_danes as $naloga): ?>
-                <div class="task-item" onclick="window.location.href='?view=<?= $naloga['id'] ?>'" style="cursor: pointer;">
-                    <div class="task-checkbox" onclick="event.stopPropagation();"></div>
+                <div class="task-item" onclick="window.location.href='?view=<?= $naloga['id'] ?>'" style="cursor: pointer;" id="task-<?= $naloga['id'] ?>">
+                    <div class="task-checkbox" onclick="event.stopPropagation(); completeTask(<?= $naloga['id'] ?>);"></div>
                     <div class="task-content">
                         <div class="task-title">
                             <?= htmlspecialchars($naloga['naslov']) ?>
@@ -206,8 +220,8 @@ try {
                 Prihajajoče <span class="task-count"><?= count($naloge_ostalo) ?> <?= count($naloge_ostalo) == 1 ? 'naloga' : 'naloge' ?></span>
             </div>
             <?php foreach ($naloge_ostalo as $naloga): ?>
-                <div class="task-item" onclick="window.location.href='?view=<?= $naloga['id'] ?>'" style="cursor: pointer;">
-                    <div class="task-checkbox" onclick="event.stopPropagation();"></div>
+                <div class="task-item" onclick="window.location.href='?view=<?= $naloga['id'] ?>'" style="cursor: pointer;" id="task-<?= $naloga['id'] ?>">
+                    <div class="task-checkbox" onclick="event.stopPropagation(); completeTask(<?= $naloga['id'] ?>);"></div>
                     <div class="task-content">
                         <div class="task-title">
                             <?= htmlspecialchars($naloga['naslov']) ?>
@@ -327,6 +341,44 @@ try {
         </div>
     </div>
     <?php endif; ?>
+
+    <style>
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+        
+        .task-completing {
+            animation: slideOutRight 0.4s ease-out forwards;
+        }
+        
+        .task-checkbox {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .task-checkbox:hover {
+            background-color: #e7f1ff;
+            border-color: #0d6efd;
+        }
+    </style>
+
+    <script>
+        function completeTask(taskId) {
+            const taskElement = document.getElementById('task-' + taskId);
+            taskElement.classList.add('task-completing');
+            
+            setTimeout(() => {
+                window.location.href = '?complete=' + taskId;
+            }, 400);
+        }
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
