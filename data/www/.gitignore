@@ -1,0 +1,26 @@
+# Cache datoteke
+cache/
+
+# Environment configuration
+.env
+
+# Keep .env.example in repository
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
