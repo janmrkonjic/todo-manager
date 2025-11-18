@@ -11,6 +11,11 @@ try {
     
     $uporabnik_id = $_SESSION['uporabnik_id'];
     
+    // Pridobi profilno sliko uporabnika
+    $stmt = $pdo->prepare('SELECT profilna_slika FROM Uporabnik WHERE id = :id');
+    $stmt->execute(['id' => $uporabnik_id]);
+    $uporabnik_slika = $stmt->fetchColumn();
+    
     // Preveri, če je ID skupine podan
     if (!isset($_GET['id'])) {
         header("Location: skupine.php");
@@ -153,7 +158,7 @@ try {
     
     // Pridobi člane skupine
     $stmt = $pdo->prepare("
-        SELECT u.id, u.uporabnisko_ime, u.email, cs.datum_prikljucitve,
+        SELECT u.id, u.uporabnisko_ime, u.email, u.profilna_slika, cs.datum_prikljucitve,
                CASE WHEN s.vodja_id = u.id THEN 1 ELSE 0 END as je_vodja
         FROM ClaniSkupine cs
         INNER JOIN Uporabnik u ON cs.uporabnik_id = u.id
@@ -225,6 +230,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
+    <script src="lazy-loader.js" defer></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -252,10 +258,20 @@ try {
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> <?php echo htmlspecialchars($_SESSION['uporabnisko_ime']); ?>
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <?php if ($uporabnik_slika && file_exists('uploads/profilne/' . $uporabnik_slika)): ?>
+                                <img src="uploads/profilne/<?= htmlspecialchars($uporabnik_slika) ?>" 
+                                     alt="Profil" 
+                                     class="rounded-circle me-2" 
+                                     style="width: 32px; height: 32px; object-fit: cover;">
+                            <?php else: ?>
+                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+                            <?php endif; ?>
+                            <?php echo htmlspecialchars($_SESSION['uporabnisko_ime']); ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="profil.php"><i class="bi bi-person-circle"></i> Profil</a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="odjava.php"><i class="bi bi-box-arrow-right"></i> Odjava</a></li>
                         </ul>
                     </li>
@@ -297,14 +313,28 @@ try {
                         <div class="list-group">
                             <?php foreach ($clani as $clan): ?>
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="bi bi-person-fill"></i> 
-                                        <strong><?php echo htmlspecialchars($clan['uporabnisko_ime']); ?></strong>
-                                        <?php if ($clan['je_vodja']): ?>
-                                            <span class="badge bg-warning text-dark ms-2">Vodja</span>
+                                    <div class="d-flex align-items-center">
+                                        <?php if ($clan['profilna_slika'] && file_exists('uploads/profilne/' . $clan['profilna_slika'])): ?>
+                                            <img src="uploads/profilne/<?= htmlspecialchars($clan['profilna_slika']) ?>" 
+                                                 alt="<?= htmlspecialchars($clan['uporabnisko_ime']) ?>" 
+                                                 class="rounded-circle" 
+                                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                                 data-lazy="true"
+                                                 loading="lazy">
+                                        <?php else: ?>
+                                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                                <i class="bi bi-person-fill"></i>
+                                            </div>
                                         <?php endif; ?>
-                                        <br>
-                                        <small class="text-muted"><?php echo htmlspecialchars($clan['email']); ?></small>
+                                        <div>
+                                            <strong><?php echo htmlspecialchars($clan['uporabnisko_ime']); ?></strong>
+                                            <?php if ($clan['je_vodja']): ?>
+                                                <span class="badge bg-warning text-dark ms-2">Vodja</span>
+                                            <?php endif; ?>
+                                            <br>
+                                            <small class="text-muted"><?php echo htmlspecialchars($clan['email']); ?></small>
+                                        </div>
                                     </div>
                                     <?php if ($je_vodja && !$clan['je_vodja']): ?>
                                         <button class="btn btn-sm btn-outline-danger" 
@@ -393,7 +423,7 @@ try {
                                                     <?php
                                                     // Pridobi komentarje za to nalogo
                                                     $stmt = $pdo->prepare("
-                                                        SELECT k.*, u.uporabnisko_ime
+                                                        SELECT k.*, u.uporabnisko_ime, u.profilna_slika
                                                         FROM Komentar k
                                                         INNER JOIN Uporabnik u ON k.uporabnik_id = u.id
                                                         WHERE k.naloga_id = ?
@@ -411,11 +441,28 @@ try {
                                                         <div class="komentarji-list mb-3" style="max-height: 300px; overflow-y: auto;">
                                                             <?php foreach ($komentarji as $komentar): ?>
                                                                 <div class="border-bottom pb-2 mb-2">
-                                                                    <div class="d-flex justify-content-between">
-                                                                        <strong><?php echo htmlspecialchars($komentar['uporabnisko_ime']); ?></strong>
-                                                                        <small class="text-muted"><?php echo date('d.m.Y H:i', strtotime($komentar['datum_vnosa'])); ?></small>
+                                                                    <div class="d-flex">
+                                                                        <?php if ($komentar['profilna_slika'] && file_exists('uploads/profilne/' . $komentar['profilna_slika'])): ?>
+                                                                            <img src="uploads/profilne/<?= htmlspecialchars($komentar['profilna_slika']) ?>" 
+                                                                                 alt="<?= htmlspecialchars($komentar['uporabnisko_ime']) ?>" 
+                                                                                 class="rounded-circle" 
+                                                                                 style="width: 32px; height: 32px; object-fit: cover;"
+                                                                                 data-lazy="true"
+                                                                                 loading="lazy">
+                                                                        <?php else: ?>
+                                                                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                                                                                 style="width: 36px; height: 36px; font-size: 1rem;">
+                                                                                <i class="bi bi-person-fill"></i>
+                                                                            </div>
+                                                                        <?php endif; ?>
+                                                                        <div class="flex-grow-1">
+                                                                            <div class="d-flex justify-content-between">
+                                                                                <strong><?php echo htmlspecialchars($komentar['uporabnisko_ime']); ?></strong>
+                                                                                <small class="text-muted"><?php echo date('d.m.Y H:i', strtotime($komentar['datum_vnosa'])); ?></small>
+                                                                            </div>
+                                                                            <p class="mb-0"><?php echo nl2br(htmlspecialchars($komentar['besedilo'])); ?></p>
+                                                                        </div>
                                                                     </div>
-                                                                    <p class="mb-0"><?php echo nl2br(htmlspecialchars($komentar['besedilo'])); ?></p>
                                                                 </div>
                                                             <?php endforeach; ?>
                                                         </div>
@@ -523,6 +570,9 @@ try {
 
     <script src="api.js"></script>
     <script>
+        // VERY FIRST LOG - to confirm script loads
+        console.log('%c=== SCRIPT LOADED ===', 'background: green; color: white; font-size: 16px; padding: 5px;');
+        
         const skupinaId = <?= $skupina_id ?>;
         
         // AJAX funkcija za označevanje naloge kot opravljene
@@ -553,8 +603,15 @@ try {
         }
         
         // AJAX funkcija za dodajanje komentarja
+        console.log('Setting up comment form handlers...');
+        const commentForms = document.querySelectorAll('.komentar-form');
+        console.log('Found comment forms:', commentForms.length);
+        
         document.querySelectorAll('.komentar-form').forEach(form => {
+            console.log('Attaching listener to form:', form);
             form.addEventListener('submit', async function(e) {
+                console.log('%c FORM SUBMIT EVENT TRIGGERED!', 'background: red; color: white; font-size: 20px; padding: 10px;');
+                alert('Form submit event triggered! Check console.');
                 e.preventDefault();
                 
                 const formData = new FormData(this);
@@ -562,15 +619,24 @@ try {
                 const textarea = this.querySelector('textarea[name="besedilo"]');
                 const submitButton = this.querySelector('button[type="submit"]');
                 
+                console.log('Submitting comment for task:', nalogoId);
+                
                 const originalButtonText = submitButton.innerHTML;
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Dodajam...';
                 
                 try {
+                    console.log('Calling API...');
                     const response = await apiPost('/komentarji.php', formData);
+                    console.log('API returned:', response);
                     
                     if (response.success) {
                         showAlert(response.message, 'success');
+                        
+                        // Debug - preveri kaj vrača API
+                        console.log('API Response:', response);
+                        console.log('Komentar data:', response.komentar);
+                        console.log('Profilna slika:', response.komentar.profilna_slika);
                         
                         // Dodaj komentar v DOM
                         addCommentToDOM(nalogoId, response.komentar);
@@ -594,8 +660,13 @@ try {
         
         // Funkcija za dodajanje komentarja v DOM
         function addCommentToDOM(nalogoId, komentar) {
+            console.log('addCommentToDOM called with:', nalogoId, komentar);
+            
             const komentarjiContainer = document.querySelector(`#komentarModal${nalogoId} .komentarji-list`);
-            if (!komentarjiContainer) return;
+            if (!komentarjiContainer) {
+                console.error('Komentarji container not found for:', nalogoId);
+                return;
+            }
             
             // Odstrani "Ni komentarjev" sporočilo, če obstaja
             const noComments = komentarjiContainer.querySelector('.text-muted.text-center');
@@ -603,17 +674,56 @@ try {
                 noComments.remove();
             }
             
+            // Pripravi HTML za profilno sliko
+            let profileImageHtml;
+            const hasImage = komentar.profilna_slika && komentar.profilna_slika !== null && komentar.profilna_slika !== '';
+            
+            console.log('Has image:', hasImage, 'Value:', komentar.profilna_slika);
+            
+            if (hasImage) {
+                const imagePath = 'uploads/profilne/' + komentar.profilna_slika;
+                console.log('Using image path:', imagePath);
+                profileImageHtml = `
+                    <img src="${imagePath}" 
+                         alt="${escapeHtml(komentar.uporabnisko_ime)}" 
+                         class="rounded-circle me-2" 
+                         style="width: 36px; height: 36px; object-fit: cover;"
+                         data-lazy="true"
+                         loading="lazy"
+                         onerror="console.error('Image failed to load:', this.src); this.style.display='none';">
+                `;
+            } else {
+                console.log('Using default icon');
+                profileImageHtml = `
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                         style="width: 36px; height: 36px; font-size: 1rem;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                `;
+            }
+            
             const komentarElement = document.createElement('div');
             komentarElement.className = 'border-bottom pb-2 mb-2';
             komentarElement.innerHTML = `
-                <div class="d-flex justify-content-between">
-                    <strong>${escapeHtml(komentar.uporabnisko_ime)}</strong>
-                    <small class="text-muted">${formatDate(komentar.datum_vnosa)}</small>
+                <div class="d-flex">
+                    ${profileImageHtml}
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <strong>${escapeHtml(komentar.uporabnisko_ime)}</strong>
+                            <small class="text-muted">${formatDate(komentar.datum_vnosa)}</small>
+                        </div>
+                        <p class="mb-0">${escapeHtml(komentar.besedilo)}</p>
+                    </div>
                 </div>
-                <p class="mb-0">${escapeHtml(komentar.besedilo)}</p>
             `;
             
             komentarjiContainer.appendChild(komentarElement);
+            console.log('Comment added to DOM');
+            
+            // Refresh lazy loading za novo dodano sliko
+            if (window.lazyLoader && hasImage) {
+                window.lazyLoader.refresh(komentarElement);
+            }
         }
         
         // Funkcija za posodabljanje števca komentarjev

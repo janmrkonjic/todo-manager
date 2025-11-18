@@ -45,6 +45,11 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
     
+    // Pridobi profilno sliko uporabnika
+    $stmt = $pdo->prepare('SELECT profilna_slika FROM Uporabnik WHERE id = :id');
+    $stmt->execute(['id' => $_SESSION['uporabnik_id']]);
+    $uporabnik_slika = $stmt->fetchColumn();
+    
         $filterSql = '';
         $filterParams = [];
 
@@ -220,6 +225,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
     <script src="storage.js"></script>
+    <script src="lazy-loader.js" defer></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -252,9 +258,19 @@ try {
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <span class="navbar-text text-white me-3">
-                                                    <i class="bi bi-person-circle" style="margin-right: 8px;"></i><?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
-                        </span>
+                        <a class="nav-link d-flex align-items-center" href="profil.php">
+                            <?php if ($uporabnik_slika && file_exists('uploads/profilne/' . $uporabnik_slika)): ?>
+                                <img src="uploads/profilne/<?= htmlspecialchars($uporabnik_slika) ?>" 
+                                     alt="Profil" 
+                                     class="rounded-circle me-2" 
+                                     style="width: 32px; height: 32px; object-fit: cover;"
+                                     data-lazy="true"
+                                     loading="lazy">
+                            <?php else: ?>
+                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+                            <?php endif; ?>
+                            <?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="odjava.php">

@@ -12,6 +12,11 @@ try {
     $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
+    
+    // Pridobi profilno sliko uporabnika
+    $stmt = $pdo->prepare('SELECT profilna_slika FROM Uporabnik WHERE id = :id');
+    $stmt->execute(['id' => $_SESSION['uporabnik_id']]);
+    $uporabnik_slika = $stmt->fetchColumn();
 } catch(PDOException $e) {
     die("Napaka pri povezavi z bazo: " . $e->getMessage());
 }
@@ -76,6 +81,7 @@ $vloge = $stmt->fetchAll();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="style.css">
+    <script src="lazy-loader.js" defer></script>
 </head>
 <body>
     <!-- Navbar -->
@@ -107,10 +113,18 @@ $vloge = $stmt->fetchAll();
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <span class="navbar-text text-white me-3">
+                        <a class="nav-link d-flex align-items-center" href="profil.php">
+                            <?php if ($uporabnik_slika && file_exists('uploads/profilne/' . $uporabnik_slika)): ?>
+                                <img src="uploads/profilne/<?= htmlspecialchars($uporabnik_slika) ?>" 
+                                     alt="Profil" 
+                                     class="rounded-circle me-2" 
+                                     style="width: 32px; height: 32px; object-fit: cover;">
+                            <?php else: ?>
+                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+                            <?php endif; ?>
                             <?php echo htmlspecialchars($_SESSION['uporabnisko_ime']); ?>
                             <span class="badge bg-light text-primary ms-2"><?php echo htmlspecialchars($_SESSION['vloga_naziv']); ?></span>
-                        </span>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="odjava.php">

@@ -64,13 +64,21 @@ try {
         
         // Pridobi podatke o novem komentarju
         $stmt = $pdo->prepare("
-            SELECT k.*, u.uporabnisko_ime 
+            SELECT k.*, u.uporabnisko_ime, u.profilna_slika 
             FROM Komentar k 
             JOIN Uporabnik u ON k.uporabnik_id = u.id 
             WHERE k.id = ?
         ");
         $stmt->execute([$komentar_id]);
         $komentar = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Preveri, če slika res obstaja na strežniku
+        if ($komentar['profilna_slika']) {
+            $imagePath = __DIR__ . '/../uploads/profilne/' . $komentar['profilna_slika'];
+            if (!file_exists($imagePath)) {
+                $komentar['profilna_slika'] = null;
+            }
+        }
         
         echo json_encode([
             'success' => true, 

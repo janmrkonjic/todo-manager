@@ -3,6 +3,19 @@ session_start();
 require_once 'preveri_prijavo.php';
 preveri_prijavo();
 preveri_vlogo([1]);
+
+// Pridobi profilno sliko uporabnika
+try {
+    $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
+    $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    ]);
+    $stmt = $pdo->prepare('SELECT profilna_slika FROM Uporabnik WHERE id = :id');
+    $stmt->execute(['id' => $_SESSION['uporabnik_id']]);
+    $uporabnik_slika = $stmt->fetchColumn();
+} catch (PDOException $e) {
+    $uporabnik_slika = null;
+}
 ?>
 <!DOCTYPE html>
 <html lang="sl">
@@ -13,6 +26,7 @@ preveri_vlogo([1]);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
+    <script src="lazy-loader.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         .chart-container {
@@ -71,10 +85,18 @@ preveri_vlogo([1]);
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <span class="navbar-text text-white me-3">
+                        <a class="nav-link d-flex align-items-center" href="profil.php">
+                            <?php if ($uporabnik_slika && file_exists('uploads/profilne/' . $uporabnik_slika)): ?>
+                                <img src="uploads/profilne/<?= htmlspecialchars($uporabnik_slika) ?>" 
+                                     alt="Profil" 
+                                     class="rounded-circle me-2" 
+                                     style="width: 32px; height: 32px; object-fit: cover;">
+                            <?php else: ?>
+                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+                            <?php endif; ?>
                             <?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
                             <span class="badge bg-light text-primary ms-2"><?= htmlspecialchars($_SESSION['vloga_naziv']) ?></span>
-                        </span>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="odjava.php">
