@@ -104,6 +104,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
+    <script src="storage.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -173,9 +174,14 @@ try {
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1><i class="bi bi-people"></i> Moje skupine</h1>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ustvariSkupinoModal">
-                <i class="bi bi-plus-circle"></i> Ustvari novo skupino
-            </button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-danger" id="resetPreferencesBtn" title="Počisti vse shranjene nastavitve">
+                    <i class="bi bi-trash"></i> Ponastavi pogled
+                </button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ustvariSkupinoModal">
+                    <i class="bi bi-plus-circle"></i> Ustvari novo skupino
+                </button>
+            </div>
         </div>
 
         <!-- Skupine kjer je uporabnik vodja -->
@@ -308,5 +314,82 @@ try {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // === SessionStorage za zadnjo odprto skupino ===
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Shrani ID skupine pri kliku na gumb "Odpri skupino"
+            const groupLinks = document.querySelectorAll('a[href*="skupina_detail.php?id="]');
+            groupLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const url = new URL(this.href);
+                    const groupId = url.searchParams.get('id');
+                    if (groupId) {
+                        saveLastOpenedGroup(parseInt(groupId));
+                        console.log('Shranil ID zadnje odprte skupine:', groupId);
+                    }
+                });
+            });
+            
+            // Preveri, če imamo shranjeno zadnjo odprto skupino in jo označi
+            const lastGroupId = getLastOpenedGroup();
+            if (lastGroupId) {
+                const lastGroupCard = document.querySelector(`a[href*="skupina_detail.php?id=${lastGroupId}"]`);
+                if (lastGroupCard) {
+                    const card = lastGroupCard.closest('.card');
+                    if (card) {
+                        // Dodaj vizualno oznako zadnje odprte skupine
+                        card.style.boxShadow = '0 0 15px rgba(0, 123, 255, 0.5)';
+                        
+                        // Dodaj badge "Zadnja odprta"
+                        const cardBody = card.querySelector('.card-body');
+                        if (cardBody && !cardBody.querySelector('.last-opened-badge')) {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge bg-primary mb-2 last-opened-badge';
+                            badge.innerHTML = '<i class="bi bi-clock-history"></i> Zadnja odprta';
+                            cardBody.insertBefore(badge, cardBody.firstChild);
+                        }
+                        
+                        // Avtomatsko se pomakni do kartice
+                        setTimeout(() => {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 100);
+                    }
+                }
+            }
+            
+            // Gumb za ponastavitev vseh preferenc
+            const resetBtn = document.getElementById('resetPreferencesBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    if (confirm('Ali ste prepričani, da želite počistiti vse shranjene nastavitve?')) {
+                        clearUserPreferences();
+                        // Počisti tudi sessionStorage za zadnjo odprto skupino
+                        removeFromSession('last_opened_group');
+                        
+                        // Prikaži obvestilo
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                        alertDiv.innerHTML = `
+                            Nastavitve so bile ponastavljene.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        `;
+                        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+                        
+                        // Odstrani vizualne oznake
+                        document.querySelectorAll('.last-opened-badge').forEach(badge => badge.remove());
+                        document.querySelectorAll('.card').forEach(card => {
+                            card.style.boxShadow = '';
+                        });
+                        
+                        // Osvežitev po 2 sekundah
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

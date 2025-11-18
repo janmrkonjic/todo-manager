@@ -10,6 +10,21 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
     
+    // Posodabljanje naloge
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['uredi_nalogo'])) {
+        $id = (int)$_POST['id'];
+        $naslov = trim($_POST['naslov']);
+        $opis = trim($_POST['opis']);
+        $rok_izvedbe = $_POST['rok_izvedbe'] ?: null;
+        $status = $_POST['status'];
+        
+        $stmt = $pdo->prepare("UPDATE Naloga SET naslov = ?, opis = ?, rok_izvedbe = ?, status = ? WHERE id = ?");
+        $stmt->execute([$naslov, $opis, $rok_izvedbe, $status, $id]);
+        
+        header("Location: administracija.php");
+        exit;
+    }
+    
     // Brisanje naloge
     if (isset($_GET['delete'])) {
         $id = (int)$_GET['delete'];
@@ -60,11 +75,16 @@ try {
                             <i class="bi bi-people"></i> Uporabniki
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="statistika.php">
+                            <i class="bi bi-bar-chart-line"></i> Statistika
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <span class="navbar-text text-white me-3">
-                            <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
+                            <?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
                             <span class="badge bg-light text-primary ms-2"><?= htmlspecialchars($_SESSION['vloga_naziv']) ?></span>
                         </span>
                     </li>
@@ -116,6 +136,11 @@ try {
                                         </td>
                                         <td><?= date('d.m.Y H:i', strtotime($naloga['datum_ustvarjenja'])) ?></td>
                                         <td>
+                                            <button class="btn btn-sm btn-primary me-2" 
+                                                    onclick="odpriModalUredi(<?= htmlspecialchars(json_encode($naloga)) ?>)" 
+                                                    title="Uredi">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
                                             <a href="?delete=<?= $naloga['id'] ?>" class="btn btn-sm btn-danger" 
                                                onclick="return confirm('Ste prepričani?')" title="Izbriši">
                                                 <i class="bi bi-trash"></i>
@@ -131,6 +156,73 @@ try {
         </div>
     </div>
 
+    <!-- Modal za urejanje naloge -->
+    <div class="modal fade" id="urediNalogoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="administracija.php">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Urejanje naloge</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="uredi_nalogo" value="1">
+                        <input type="hidden" name="id" id="uredi_id">
+                        
+                        <div class="mb-3">
+                            <label for="uredi_naslov" class="form-label">Naslov</label>
+                            <input type="text" class="form-control" id="uredi_naslov" name="naslov" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="uredi_opis" class="form-label">Opis</label>
+                            <textarea class="form-control" id="uredi_opis" name="opis" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="uredi_rok_izvedbe" class="form-label">Rok izvedbe</label>
+                            <input type="datetime-local" class="form-control" id="uredi_rok_izvedbe" name="rok_izvedbe">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="uredi_status" class="form-label">Status</label>
+                            <select class="form-select" id="uredi_status" name="status" required>
+                                <option value="neopravljeno">Neopravljeno</option>
+                                <option value="opravljeno">Opravljeno</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                        <button type="submit" class="btn btn-primary">Shrani spremembe</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function odpriModalUredi(naloga) {
+            // Napolni modal s podatki naloge
+            document.getElementById('uredi_id').value = naloga.id;
+            document.getElementById('uredi_naslov').value = naloga.naslov;
+            document.getElementById('uredi_opis').value = naloga.opis;
+            document.getElementById('uredi_status').value = naloga.status;
+            
+            // Konvertiraj rok izvedbe v format za datetime-local input
+            if (naloga.rok_izvedbe) {
+                // Odstrani sekundni del in nadomesti presledek z 'T'
+                const rokFormatiran = naloga.rok_izvedbe.slice(0, 16).replace(' ', 'T');
+                document.getElementById('uredi_rok_izvedbe').value = rokFormatiran;
+            } else {
+                document.getElementById('uredi_rok_izvedbe').value = '';
+            }
+            
+            // Odpri modal
+            const modal = new bootstrap.Modal(document.getElementById('urediNalogoModal'));
+            modal.show();
+        }
+    </script>
 </body>
 </html>

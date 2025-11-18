@@ -219,6 +219,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
+    <script src="storage.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -306,6 +307,9 @@ try {
                         <a href="index.php" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-counterclockwise"></i> Ponastavi
                         </a>
+                        <button type="button" class="btn btn-outline-danger" id="resetPreferencesBtn" title="Počisti vse shranjene nastavitve">
+                            <i class="bi bi-trash"></i> Ponastavi pogled
+                        </button>
                     </div>
                 </div>
             </div>
@@ -538,6 +542,98 @@ try {
     <script src="api.js"></script>
     <script>
         const filterQueryAppend = <?= json_encode($filterQueryAppend) ?>;
+
+        // === LocalStorage za shranjevanje filtrov ===
+        
+        // Pri nalaganju strani preveri, če imamo shranjene filtre
+        document.addEventListener('DOMContentLoaded', function() {
+            // Samo če ni URL parametrov, naloži shranjene preference
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasUrlFilters = urlParams.has('search') || urlParams.has('tip') || 
+                                  urlParams.has('rok_od') || urlParams.has('rok_do');
+            
+            if (!hasUrlFilters) {
+                const savedFilters = getTaskFilters();
+                if (savedFilters) {
+                    // Naloži shranjene filtre v obrazec
+                    if (savedFilters.search) {
+                        document.querySelector('input[name="search"]').value = savedFilters.search;
+                    }
+                    if (savedFilters.tip) {
+                        document.querySelector('select[name="tip"]').value = savedFilters.tip;
+                    }
+                    if (savedFilters.rok_od) {
+                        document.querySelector('input[name="rok_od"]').value = savedFilters.rok_od;
+                    }
+                    if (savedFilters.rok_do) {
+                        document.querySelector('input[name="rok_do"]').value = savedFilters.rok_do;
+                    }
+                    
+                    // Odpri napredne filtre, če so bili prej odprti
+                    if (savedFilters.advancedOpen) {
+                        const advancedFilters = document.getElementById('advancedFilters');
+                        const filterToggle = document.querySelector('.filter-toggle');
+                        if (advancedFilters && filterToggle) {
+                            advancedFilters.classList.add('show');
+                            filterToggle.setAttribute('aria-expanded', 'true');
+                        }
+                    }
+                }
+            }
+            
+            // Preveri shranjene preference sortiranja (za prihodnjo implementacijo točke 4)
+            const savedSorting = getSortPreferences();
+            if (savedSorting) {
+                // Označimo izbran stolpec za sortiranje, ko bo implementiran UI
+                console.log('Shranjene preference sortiranja:', savedSorting);
+            }
+            
+            // Shrani trenutne filtre pri oddaji obrazca
+            const filterForm = document.getElementById('taskFilterForm');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function() {
+                    const filters = {
+                        search: document.querySelector('input[name="search"]').value,
+                        tip: document.querySelector('select[name="tip"]').value,
+                        rok_od: document.querySelector('input[name="rok_od"]').value,
+                        rok_do: document.querySelector('input[name="rok_do"]').value,
+                        advancedOpen: document.getElementById('advancedFilters').classList.contains('show')
+                    };
+                    saveTaskFilters(filters);
+                });
+            }
+            
+            // Gumb za ponastavitev vseh preferenc
+            const resetBtn = document.getElementById('resetPreferencesBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    if (confirm('Ali ste prepričani, da želite počistiti vse shranjene nastavitve?')) {
+                        clearUserPreferences();
+                        showAlert('Nastavitve so bile ponastavljene.', 'success');
+                        // Osvežitev na čisto stran
+                        setTimeout(() => {
+                            window.location.href = 'index.php';
+                        }, 1000);
+                    }
+                });
+            }
+            
+            // Sledenje spremembam stanja naprednih filtrov
+            const advancedFilters = document.getElementById('advancedFilters');
+            if (advancedFilters) {
+                advancedFilters.addEventListener('shown.bs.collapse', function() {
+                    const savedFilters = getTaskFilters() || {};
+                    savedFilters.advancedOpen = true;
+                    saveTaskFilters(savedFilters);
+                });
+                
+                advancedFilters.addEventListener('hidden.bs.collapse', function() {
+                    const savedFilters = getTaskFilters() || {};
+                    savedFilters.advancedOpen = false;
+                    saveTaskFilters(savedFilters);
+                });
+            }
+        });
 
         // AJAX funkcija za označevanje naloge kot opravljene
         async function completeTask(taskId) {

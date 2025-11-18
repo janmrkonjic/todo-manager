@@ -9,12 +9,15 @@ function preveri_prijavo() {
         exit;
     }
     
-    // Če je administrator, preusmeri na administracijo (razen če je že tam ali na uporabniki.php)
+    // Če je administrator, preusmeri na administracijo (razen če je že tam ali na uporabniki.php ali statistika.php)
     if (isset($_SESSION['vloga_id']) && $_SESSION['vloga_id'] == 1) {
         $current_page = basename($_SERVER['PHP_SELF']);
-        $allowed_pages = ['administracija.php', 'uporabniki.php', 'odjava.php'];
+        $current_dir = basename(dirname($_SERVER['PHP_SELF']));
         
-        if (!in_array($current_page, $allowed_pages)) {
+        // Ne preusmerjaj, če je uporabnik na dovoljenih straneh ali v API direktoriju
+        $allowed_pages = ['administracija.php', 'uporabniki.php', 'statistika.php', 'odjava.php'];
+        
+        if (!in_array($current_page, $allowed_pages) && $current_dir !== 'api') {
             header("Location: administracija.php");
             exit;
         }

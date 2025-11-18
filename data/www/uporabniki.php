@@ -99,11 +99,16 @@ $vloge = $stmt->fetchAll();
                             <i class="bi bi-people"></i> Uporabniki
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="statistika.php">
+                            <i class="bi bi-bar-chart-line"></i> Statistika
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <span class="navbar-text text-white me-3">
-                            <i class="bi bi-person-circle"></i> <?php echo htmlspecialchars($_SESSION['uporabnisko_ime']); ?>
+                            <?php echo htmlspecialchars($_SESSION['uporabnisko_ime']); ?>
                             <span class="badge bg-light text-primary ms-2"><?php echo htmlspecialchars($_SESSION['vloga_naziv']); ?></span>
                         </span>
                     </li>
