@@ -373,3 +373,45 @@ body {
     display: flex;
     align-items: center;
 }
+
+/* Animacija za obvestila */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Izboljšan izgled obvestil */
+.ajax-alert {
+    border-left: 4px solid currentColor;
+}
+
+.ajax-alert.alert-success {
+    background-color: #d1e7dd;
+    border-color: #0f5132;
+    color: #0f5132;
+}
+
+.ajax-alert.alert-error,
+.ajax-alert.alert-danger {
+    background-color: #f8d7da;
+    border-color: #842029;
+    color: #842029;
+}
+
+.ajax-alert.alert-warning {
+    background-color: #fff3cd;
+    border-color: #997404;
+    color: #997404;
+}
+
+.ajax-alert.alert-info {
+    background-color: #cff4fc;
+    border-color: #055160;
+    color: #055160;
+}

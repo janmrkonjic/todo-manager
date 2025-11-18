@@ -265,19 +265,6 @@ try {
     </nav>
 
     <div class="container mt-4">
-        <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?php echo htmlspecialchars($_SESSION['success_message']); unset($_SESSION['success_message']); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-        
-        <?php if (isset($_SESSION['error_message'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <?php echo htmlspecialchars($_SESSION['error_message']); unset($_SESSION['error_message']); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -321,7 +308,7 @@ try {
                                     </div>
                                     <?php if ($je_vodja && !$clan['je_vodja']): ?>
                                         <button class="btn btn-sm btn-outline-danger" 
-                                                onclick="if(confirm('Ste prepričani, da želite odstraniti tega člana?')) window.location.href='?id=<?php echo $skupina_id; ?>&odstrani_clana=<?php echo $clan['id']; ?>'">
+                                                onclick="removeMember(<?php echo $clan['id']; ?>, <?php echo $skupina_id; ?>)">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     <?php endif; ?>
@@ -386,7 +373,7 @@ try {
                                                 </button>
                                                 <?php if ($je_vodja): ?>
                                                     <button class="btn btn-sm btn-danger" 
-                                                            onclick="if(confirm('Ste prepričani, da želite izbrisati to nalogo?')) window.location.href='?id=<?php echo $skupina_id; ?>&izbrisi_nalogo=<?php echo $naloga['id']; ?>'">
+                                                            onclick="deleteTask(<?php echo $naloga['id']; ?>, <?php echo $skupina_id; ?>)">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 <?php endif; ?>
@@ -654,6 +641,41 @@ try {
             div.textContent = text || '';
             return div.innerHTML;
         }
+        
+        // Funkcija za odstranitev člana
+        async function removeMember(memberId, groupId) {
+            const confirmed = await showConfirm(
+                'Ste prepričani, da želite odstraniti tega člana?',
+                'Odstranitev člana'
+            );
+            
+            if (confirmed) {
+                window.location.href = '?id=' + groupId + '&odstrani_clana=' + memberId;
+            }
+        }
+        
+        // Funkcija za brisanje naloge
+        async function deleteTask(taskId, groupId) {
+            const confirmed = await showConfirm(
+                'Ste prepričani, da želite izbrisati to nalogo?',
+                'Brisanje naloge'
+            );
+            
+            if (confirmed) {
+                window.location.href = '?id=' + groupId + '&izbrisi_nalogo=' + taskId;
+            }
+        }
+        
+        // Prikaži obvestila iz PHP sessiona
+        <?php if (isset($_SESSION['success_message'])): ?>
+            showAlert(<?php echo json_encode($_SESSION['success_message']); ?>, 'success');
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_message'])): ?>
+            showAlert(<?php echo json_encode($_SESSION['error_message']); ?>, 'error');
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

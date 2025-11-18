@@ -606,8 +606,13 @@ try {
             // Gumb za ponastavitev vseh preferenc
             const resetBtn = document.getElementById('resetPreferencesBtn');
             if (resetBtn) {
-                resetBtn.addEventListener('click', function() {
-                    if (confirm('Ali ste prepričani, da želite počistiti vse shranjene nastavitve?')) {
+                resetBtn.addEventListener('click', async function() {
+                    const confirmed = await showConfirm(
+                        'Ali ste prepričani, da želite počistiti vse shranjene nastavitve?',
+                        'Ponastavitev nastavitev'
+                    );
+                    
+                    if (confirmed) {
                         clearUserPreferences();
                         showAlert('Nastavitve so bile ponastavljene.', 'success');
                         // Osvežitev na čisto stran
@@ -906,7 +911,12 @@ try {
         
         // AJAX funkcija za brisanje naloge
         async function deleteTask(taskId) {
-            if (!confirm('Ste prepričani, da želite izbrisati to nalogo?')) {
+            const confirmed = await showConfirm(
+                'Ste prepričani, da želite izbrisati to nalogo?',
+                'Brisanje naloge'
+            );
+            
+            if (!confirmed) {
                 return;
             }
             

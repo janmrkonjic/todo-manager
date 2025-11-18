@@ -21,31 +21,54 @@ function showAlert(message, type = 'info') {
         existingAlert.remove();
     }
     
-    // Ustvari novo opozorilo
+    // Določi ikono glede na tip
+    let icon = '';
+    switch(type) {
+        case 'success':
+            icon = '<i class="bi bi-check-circle-fill me-2"></i>';
+            break;
+        case 'error':
+            icon = '<i class="bi bi-x-circle-fill me-2"></i>';
+            break;
+        case 'warning':
+            icon = '<i class="bi bi-exclamation-triangle-fill me-2"></i>';
+            break;
+        case 'info':
+            icon = '<i class="bi bi-info-circle-fill me-2"></i>';
+            break;
+    }
+    
+    // Ustvari novo obvestilo
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show ajax-alert`;
     alert.style.position = 'fixed';
     alert.style.top = '20px';
     alert.style.right = '20px';
     alert.style.zIndex = '9999';
-    alert.style.minWidth = '300px';
+    alert.style.minWidth = '320px';
     alert.style.maxWidth = '500px';
-    alert.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+    alert.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.15)';
+    alert.style.borderRadius = '8px';
+    alert.style.fontWeight = '500';
+    alert.style.animation = 'slideInRight 0.3s ease-out';
     
     alert.innerHTML = `
-        ${message}
+        <div class="d-flex align-items-center">
+            ${icon}
+            <span>${message}</span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     
     document.body.appendChild(alert);
     
-    // Samodejno odstrani po 5 sekundah
+    // Samodejno odstrani po 2 sekundah
     setTimeout(() => {
         if (alert && alert.parentNode) {
             alert.classList.remove('show');
             setTimeout(() => alert.remove(), 150);
         }
-    }, 5000);
+    }, 2000);
 }
 
 /**
@@ -134,6 +157,72 @@ async function apiDelete(endpoint, data) {
         }
         throw error;
     }
+}
+
+/**
+ * Prikaže lepi confirm dialog
+ * @param {string} message - Sporočilo
+ * @param {string} title - Naslov dialoga (opcijsko)
+ * @returns {Promise<boolean>} - True če uporabnik potrdi, False če prekliče
+ */
+function showConfirm(message, title = 'Potrditev') {
+    return new Promise((resolve) => {
+        // Odstrani obstoječe confirm dialoge
+        const existingModal = document.getElementById('customConfirmModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Ustvari modal
+        const modal = document.createElement('div');
+        modal.id = 'customConfirmModal';
+        modal.className = 'modal fade';
+        modal.tabIndex = -1;
+        modal.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>${title}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">${message}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmCancel">
+                            <i class="bi bi-x-circle me-1"></i>Prekliči
+                        </button>
+                        <button type="button" class="btn btn-danger" id="confirmOk">
+                            <i class="bi bi-check-circle me-1"></i>Potrdi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Event handlers
+        document.getElementById('confirmOk').addEventListener('click', () => {
+            bsModal.hide();
+            resolve(true);
+        });
+        
+        document.getElementById('confirmCancel').addEventListener('click', () => {
+            bsModal.hide();
+            resolve(false);
+        });
+        
+        // Ko se modal zapre, odstrani iz DOMa
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+        });
+    });
 }
 
 /**

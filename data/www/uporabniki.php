@@ -187,7 +187,7 @@ $vloge = $stmt->fetchAll();
                                                     <?php echo htmlspecialchars($uporabnik['email']); ?>
                                                 </td>
                                                 <td>
-                                                    <form method="POST" style="display: inline;" onchange="if(confirm('Ali ste prepričani, da želite spremeniti vlogo tega uporabnika?')) this.submit(); else return false;">
+                                                    <form method="POST" style="display: inline;" onchange="event.preventDefault(); changeRole(this);">
                                                         <input type="hidden" name="uporabnik_id" value="<?php echo $uporabnik['id']; ?>">
                                                         <select name="vloga_id" class="form-select form-select-sm" style="width: auto; display: inline-block;" 
                                                                 <?php echo $uporabnik['id'] == $_SESSION['uporabnik_id'] ? 'disabled' : ''; ?>>
@@ -206,11 +206,10 @@ $vloge = $stmt->fetchAll();
                                                 </td>
                                                 <td class="text-center">
                                                     <?php if ($uporabnik['id'] != $_SESSION['uporabnik_id']): ?>
-                                                        <a href="?izbrisi=<?php echo $uporabnik['id']; ?>" 
-                                                           class="btn btn-sm btn-danger"
-                                                           onclick="return confirm('Ali ste prepričani, da želite izbrisati tega uporabnika?');">
+                                                        <button onclick="deleteUser(<?php echo $uporabnik['id']; ?>)" 
+                                                           class="btn btn-sm btn-danger">
                                                             <i class="bi bi-trash"></i> Izbriši
-                                                        </a>
+                                                        </button>
                                                     <?php else: ?>
                                                         <span class="text-muted">-</span>
                                                     <?php endif; ?>
@@ -254,5 +253,45 @@ $vloge = $stmt->fetchAll();
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
+    <script>
+        // Funkcija za brisanje uporabnika
+        async function deleteUser(userId) {
+            const confirmed = await showConfirm(
+                'Ali ste prepričani, da želite izbrisati tega uporabnika?',
+                'Brisanje uporabnika'
+            );
+            
+            if (confirmed) {
+                window.location.href = '?izbrisi=' + userId;
+            }
+        }
+        
+        // Funkcija za spremembo vloge
+        async function changeRole(form) {
+            const confirmed = await showConfirm(
+                'Ali ste prepričani, da želite spremeniti vlogo tega uporabnika?',
+                'Sprememba vloge'
+            );
+            
+            if (confirmed) {
+                form.submit();
+            } else {
+                // Resetiraj select na prejšnjo vrednost
+                form.reset();
+            }
+        }
+        
+        // Prikaži obvestila iz PHP sessiona
+        <?php if (isset($_SESSION['success_message'])): ?>
+            showAlert(<?php echo json_encode($_SESSION['success_message']); ?>, 'success');
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_message'])): ?>
+            showAlert(<?php echo json_encode($_SESSION['error_message']); ?>, 'error');
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
+    </script>
 </body>
 </html>

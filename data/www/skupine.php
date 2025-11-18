@@ -104,7 +104,6 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
-    <script src="storage.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -152,25 +151,6 @@ try {
     </nav>
 
     <div class="container mt-4">
-        <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?php 
-                echo htmlspecialchars($_SESSION['success_message']); 
-                unset($_SESSION['success_message']);
-                ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-        
-        <?php if (isset($_SESSION['error_message'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <?php 
-                echo htmlspecialchars($_SESSION['error_message']); 
-                unset($_SESSION['error_message']);
-                ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1><i class="bi bi-people"></i> Moje skupine</h1>
@@ -219,7 +199,7 @@ try {
                                                 <i class="bi bi-arrow-right-circle"></i> Odpri skupino
                                             </a>
                                             <button class="btn btn-sm btn-outline-danger" 
-                                                    onclick="if(confirm('Ste prepričani, da želite izbrisati to skupino? To bo izbrisalo vse naloge in člane skupine!')) window.location.href='?izbrisi_skupino=<?php echo $skupina['id']; ?>'">
+                                                    onclick="deleteGroup(<?php echo $skupina['id']; ?>)">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -314,6 +294,8 @@ try {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="storage.js"></script>
+    <script src="api.js"></script>
     <script>
         // === SessionStorage za zadnjo odprto skupino ===
         
@@ -361,20 +343,19 @@ try {
             // Gumb za ponastavitev vseh preferenc
             const resetBtn = document.getElementById('resetPreferencesBtn');
             if (resetBtn) {
-                resetBtn.addEventListener('click', function() {
-                    if (confirm('Ali ste prepričani, da želite počistiti vse shranjene nastavitve?')) {
+                resetBtn.addEventListener('click', async function() {
+                    const confirmed = await showConfirm(
+                        'Ali ste prepričani, da želite počistiti vse shranjene nastavitve?',
+                        'Ponastavitev nastavitev'
+                    );
+                    
+                    if (confirmed) {
                         clearUserPreferences();
                         // Počisti tudi sessionStorage za zadnjo odprto skupino
                         removeFromSession('last_opened_group');
                         
                         // Prikaži obvestilo
-                        const alertDiv = document.createElement('div');
-                        alertDiv.className = 'alert alert-success alert-dismissible fade show';
-                        alertDiv.innerHTML = `
-                            Nastavitve so bile ponastavljene.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        `;
-                        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+                        showAlert('Nastavitve so bile ponastavljene.', 'success');
                         
                         // Odstrani vizualne oznake
                         document.querySelectorAll('.last-opened-badge').forEach(badge => badge.remove());
@@ -390,6 +371,29 @@ try {
                 });
             }
         });
+        
+        // Funkcija za brisanje skupine
+        async function deleteGroup(groupId) {
+            const confirmed = await showConfirm(
+                'Ste prepričani, da želite izbrisati to skupino? To bo izbrisalo vse naloge in člane skupine!',
+                'Brisanje skupine'
+            );
+            
+            if (confirmed) {
+                window.location.href = '?izbrisi_skupino=' + groupId;
+            }
+        }
+        
+        // Prikaži obvestila iz PHP sessiona
+        <?php if (isset($_SESSION['success_message'])): ?>
+            showAlert(<?php echo json_encode($_SESSION['success_message']); ?>, 'success');
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_message'])): ?>
+            showAlert(<?php echo json_encode($_SESSION['error_message']); ?>, 'error');
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
     </script>
 </body>
 </html>

@@ -141,10 +141,10 @@ try {
                                                     title="Uredi">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <a href="?delete=<?= $naloga['id'] ?>" class="btn btn-sm btn-danger" 
-                                               onclick="return confirm('Ste prepričani?')" title="Izbriši">
+                                            <button onclick="deleteTask(<?= $naloga['id'] ?>)" class="btn btn-sm btn-danger" 
+                                               title="Izbriši">
                                                 <i class="bi bi-trash"></i>
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -202,6 +202,7 @@ try {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
     <script>
         function odpriModalUredi(naloga) {
             // Napolni modal s podatki naloge
@@ -223,6 +224,29 @@ try {
             const modal = new bootstrap.Modal(document.getElementById('urediNalogoModal'));
             modal.show();
         }
+        
+        // Funkcija za brisanje naloge
+        async function deleteTask(taskId) {
+            const confirmed = await showConfirm(
+                'Ste prepričani, da želite izbrisati to nalogo?',
+                'Brisanje naloge'
+            );
+            
+            if (confirmed) {
+                window.location.href = '?delete=' + taskId;
+            }
+        }
+        
+        // Prikaži obvestila iz PHP sessiona
+        <?php if (isset($_SESSION['success_message'])): ?>
+            showAlert(<?php echo json_encode($_SESSION['success_message']); ?>, 'success');
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_message'])): ?>
+            showAlert(<?php echo json_encode($_SESSION['error_message']); ?>, 'error');
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
     </script>
 </body>
 </html>
