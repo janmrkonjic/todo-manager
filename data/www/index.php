@@ -456,10 +456,21 @@ try {
             </div>
             
             <div class="modal-body">
-                <?php if (!empty($naloga_detail['opis'])): ?>
-                    <p class="modal-task-description"><?= nl2br(htmlspecialchars($naloga_detail['opis'])) ?></p>
-                <?php endif; ?>
+                <div class="weather-section" style="padding: 12px 0; text-align: center;">
+                    <div class="weather-compact" id="weatherCompact" onclick="toggleWeatherDetails()">
+                        <span class="weather-icon">☁️</span>
+                        <span class="weather-temp">--°C</span>
+                        <small class="weather-city">Maribor</small>
+                    </div>
+                </div>
+                <hr style="color: #bbbbbbff">
                 
+                <div class="weather-details" id="weatherDetails" style="display: none;"></div>
+
+                <?php if (!empty($naloga_detail['opis'])): ?>
+                    <p class="modal-task-description" style="margin-bottom: 24px;"><?= nl2br(htmlspecialchars($naloga_detail['opis'])) ?></p>
+                <?php endif; ?>
+
                 <div class="comments-section">
                     <h3 class="comments-title">
                         <i class="bi bi-chat-left-text"></i> Komentarji 
@@ -967,6 +978,127 @@ try {
             div.textContent = text || '';
             return div.innerHTML;
         }
+        
+        // === Vreme funkcionalnost ===
+        
+        // Funkcija za prikazovanje/skrivanje podrobnosti o vremenu
+        function toggleWeatherDetails() {
+            const detailsElement = document.getElementById('weatherDetails');
+            const compactElement = document.getElementById('weatherCompact');
+            if (!detailsElement || !compactElement) return;
+            if (detailsElement.style.display === 'none') {
+                detailsElement.style.display = 'block';
+                compactElement.classList.add('active');
+            } else {
+                detailsElement.style.display = 'none';
+                compactElement.classList.remove('active');
+            }
+        }
+
+        // Funkcija za pridobivanje vremena
+        async function loadWeather(city = 'Maribor') {
+            const compactElement = document.getElementById('weatherCompact');
+            const detailsElement = document.getElementById('weatherDetails');
+            if (!compactElement || !detailsElement) return;
+            try {
+                const response = await fetch(`api/weather.php?city=${encodeURIComponent(city)}`);
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Napaka pri pridobivanju podatkov');
+                }
+                // Ikona za vreme
+                const weatherIcons = {
+                    '01d': '☀️', '01n': '🌙', '02d': '⛅', '02n': '☁️',
+                    '03d': '☁️', '03n': '☁️', '04d': '☁️', '04n': '☁️',
+                    '09d': '🌧️', '09n': '🌧️', '10d': '🌦️', '10n': '🌧️',
+                    '11d': '⛈️', '11n': '⛈️', '13d': '❄️', '13n': '❄️',
+                    '50d': '🌫️', '50n': '🌫️'
+                };
+                const weatherIcon = weatherIcons[data.icon] || '☁️';
+                // Prikaz kompaktnega vremena
+                compactElement.innerHTML = `
+                    <span class="weather-icon">${weatherIcon}</span>
+                    <span class="weather-temp">${data.temperature}°C</span>
+                    <small class="weather-city">${data.city}</small>
+                `;
+                // Smer vetra
+                const directions = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
+                const windDirection = directions[Math.round(data.wind_deg / 45) % 8];
+                // Sončni vzhod in zahod
+                const sunrise = data.sunrise ? new Date(data.sunrise * 1000).toLocaleTimeString('sl-SI', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                const sunset = data.sunset ? new Date(data.sunset * 1000).toLocaleTimeString('sl-SI', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                // Prikaz podrobnosti
+                detailsElement.innerHTML = `
+                    <div class="weather-detailed-content">
+                        <div class="text-center mb-3">
+                            <h4 class="mb-1">${data.city}${data.country ? ', ' + data.country : ''}</h4>
+                            <div class="weather-main-icon">${weatherIcon}</div>
+                            <h2 class="mb-0">${data.temperature}°C</h2>
+                            <p class="text-muted mb-0">${data.description}</p>
+                            <small class="text-muted">Občutek: ${data.feels_like}°C</small>
+                        </div>
+                        <div class="row g-2 text-center">
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-thermometer-half text-danger"></i>
+                                    <small class="d-block">Min/Max</small>
+                                    <strong>${data.temp_min}°C / ${data.temp_max}°C</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-droplet-half text-primary"></i>
+                                    <small class="d-block">Vlažnost</small>
+                                    <strong>${data.humidity}%</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-wind text-info"></i>
+                                    <small class="d-block">Veter</small>
+                                    <strong>${data.wind_speed} m/s ${windDirection}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-speedometer text-secondary"></i>
+                                    <small class="d-block">Pritisk</small>
+                                    <strong>${data.pressure} hPa</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-sunrise text-warning"></i>
+                                    <small class="d-block">Sončni vzhod</small>
+                                    <strong>${sunrise}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-sunset text-warning"></i>
+                                    <small class="d-block">Sončni zahod</small>
+                                    <strong>${sunset}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        ${data.from_cache ? '<small class="text-muted d-block text-center mt-2"><i class="bi bi-clock-history"></i> Shranjeno</small>' : ''}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Napaka pri nalaganju vremena:', error);
+                compactElement.innerHTML = `
+                    <span class="weather-icon">❌</span>
+                    <span class="weather-temp">--°C</span>
+                    <small class="weather-city">Napaka</small>
+                `;
+            }
+        }
+        // Naloži vreme če je modal odprt
+        <?php if ($naloga_detail): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWeather();
+        });
+        <?php endif; ?>
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
