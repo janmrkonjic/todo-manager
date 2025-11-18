@@ -10,6 +10,42 @@ body {
     font-size: 1.25rem;
 }
 
+.task-filter-form {
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+    margin-bottom: 24px;
+}
+
+.task-search-group .form-control {
+    border-left: 0;
+}
+
+.task-search-group .input-group-text {
+    background: transparent;
+    border-right: 0;
+}
+
+.filter-toggle {
+    min-width: 42px;
+}
+
+.advanced-filter-card {
+    border: 1px solid #f0f0f0;
+    border-radius: 10px;
+    padding: 16px;
+    background: #fbfbfb;
+}
+
+.filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
 .task-section-title {
     font-size: 24px;
     font-weight: 700;

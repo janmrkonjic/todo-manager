@@ -122,11 +122,6 @@ try {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="urejanje.php">
-                            <i class="bi bi-pencil-square"></i> Upravljanje nalog
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="opravljene.php">
                             <i class="bi bi-check-circle"></i> Opravljene naloge
                         </a>

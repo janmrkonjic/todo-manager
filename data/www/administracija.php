@@ -116,9 +116,6 @@ try {
                                         </td>
                                         <td><?= date('d.m.Y H:i', strtotime($naloga['datum_ustvarjenja'])) ?></td>
                                         <td>
-                                            <a href="urejanje.php?edit=<?= $naloga['id'] ?>" class="btn btn-sm btn-primary" title="Uredi">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
                                             <a href="?delete=<?= $naloga['id'] ?>" class="btn btn-sm btn-danger" 
                                                onclick="return confirm('Ste prepričani?')" title="Izbriši">
                                                 <i class="bi bi-trash"></i>

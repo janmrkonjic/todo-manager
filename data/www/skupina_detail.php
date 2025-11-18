@@ -242,11 +242,6 @@ try {
                             <i class="bi bi-house-door"></i> Domov
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="urejanje.php">
-                            <i class="bi bi-pencil-square"></i> Upravljanje nalog
-                        </a>
-                    </li>
                     <?php if ($_SESSION['vloga_id'] != 1): ?>
                     <li class="nav-item">
                         <a class="nav-link active" href="skupine.php">
@@ -382,7 +377,7 @@ try {
                                             <div class="btn-group" role="group">
                                                 <?php if ($naloga['status'] == 'neopravljeno'): ?>
                                                     <button class="btn btn-sm btn-success" 
-                                                            onclick="if(confirm('Označite to nalogo kot opravljeno?')) window.location.href='?id=<?php echo $skupina_id; ?>&opravi=1&naloga_id=<?php echo $naloga['id']; ?>'">
+                                                            onclick="completeTask(<?php echo $naloga['id']; ?>)">
                                                         <i class="bi bi-check"></i>
                                                     </button>
                                                 <?php endif; ?>
@@ -422,31 +417,31 @@ try {
                                                     ?>
                                                     
                                                     <?php if (empty($komentarji)): ?>
-                                                        <p class="text-muted">Še ni komentarjev.</p>
+                                                        <div class="komentarji-list">
+                                                            <p class="text-muted text-center">Še ni komentarjev.</p>
+                                                        </div>
                                                     <?php else: ?>
-                                                        <div class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                                                        <div class="komentarji-list mb-3" style="max-height: 300px; overflow-y: auto;">
                                                             <?php foreach ($komentarji as $komentar): ?>
-                                                                <div class="card mb-2">
-                                                                    <div class="card-body py-2">
-                                                                        <div class="d-flex justify-content-between">
-                                                                            <strong><?php echo htmlspecialchars($komentar['uporabnisko_ime']); ?></strong>
-                                                                            <small class="text-muted"><?php echo date('d.m.Y H:i', strtotime($komentar['datum_vnosa'])); ?></small>
-                                                                        </div>
-                                                                        <p class="mb-0"><?php echo nl2br(htmlspecialchars($komentar['besedilo'])); ?></p>
+                                                                <div class="border-bottom pb-2 mb-2">
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <strong><?php echo htmlspecialchars($komentar['uporabnisko_ime']); ?></strong>
+                                                                        <small class="text-muted"><?php echo date('d.m.Y H:i', strtotime($komentar['datum_vnosa'])); ?></small>
                                                                     </div>
+                                                                    <p class="mb-0"><?php echo nl2br(htmlspecialchars($komentar['besedilo'])); ?></p>
                                                                 </div>
                                                             <?php endforeach; ?>
                                                         </div>
                                                     <?php endif; ?>
                                                     
                                                     <hr>
-                                                    <form method="POST">
+                                                    <form method="POST" class="komentar-form">
                                                         <input type="hidden" name="naloga_id" value="<?php echo $naloga['id']; ?>">
                                                         <div class="mb-3">
                                                             <label class="form-label">Dodaj komentar:</label>
                                                             <textarea class="form-control" name="besedilo" rows="3" required></textarea>
                                                         </div>
-                                                        <button type="submit" name="dodaj_komentar" class="btn btn-primary">
+                                                        <button type="submit" class="btn btn-primary">
                                                             <i class="bi bi-send"></i> Dodaj komentar
                                                         </button>
                                                     </form>
@@ -539,6 +534,127 @@ try {
     </div>
     <?php endif; ?>
 
+    <script src="api.js"></script>
+    <script>
+        const skupinaId = <?= $skupina_id ?>;
+        
+        // AJAX funkcija za označevanje naloge kot opravljene
+        async function completeTask(nalogoId) {
+            const nalogoElement = document.getElementById('naloga-' + nalogoId);
+            nalogoElement.style.opacity = '0.5';
+            
+            try {
+                const response = await apiPost('/naloge.php', {
+                    action: 'opravi',
+                    naloga_id: nalogoId
+                });
+                
+                if (response.success) {
+                    showAlert(response.message, 'success');
+                    // Osveži stran po kratki zakasnitvi
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    nalogoElement.style.opacity = '1';
+                    showAlert(response.message, 'error');
+                }
+            } catch (error) {
+                nalogoElement.style.opacity = '1';
+                showAlert('Napaka: ' + error.message, 'error');
+            }
+        }
+        
+        // AJAX funkcija za dodajanje komentarja
+        document.querySelectorAll('.komentar-form').forEach(form => {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const nalogoId = formData.get('naloga_id');
+                const textarea = this.querySelector('textarea[name="besedilo"]');
+                const submitButton = this.querySelector('button[type="submit"]');
+                
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Dodajam...';
+                
+                try {
+                    const response = await apiPost('/komentarji.php', formData);
+                    
+                    if (response.success) {
+                        showAlert(response.message, 'success');
+                        
+                        // Dodaj komentar v DOM
+                        addCommentToDOM(nalogoId, response.komentar);
+                        
+                        // Počisti obrazec
+                        textarea.value = '';
+                        
+                        // Posodobi števec komentarjev
+                        updateCommentCount(nalogoId);
+                    } else {
+                        showAlert(response.message, 'error');
+                    }
+                } catch (error) {
+                    showAlert('Napaka: ' + error.message, 'error');
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                }
+            });
+        });
+        
+        // Funkcija za dodajanje komentarja v DOM
+        function addCommentToDOM(nalogoId, komentar) {
+            const komentarjiContainer = document.querySelector(`#komentarModal${nalogoId} .komentarji-list`);
+            if (!komentarjiContainer) return;
+            
+            // Odstrani "Ni komentarjev" sporočilo, če obstaja
+            const noComments = komentarjiContainer.querySelector('.text-muted.text-center');
+            if (noComments) {
+                noComments.remove();
+            }
+            
+            const komentarElement = document.createElement('div');
+            komentarElement.className = 'border-bottom pb-2 mb-2';
+            komentarElement.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <strong>${escapeHtml(komentar.uporabnisko_ime)}</strong>
+                    <small class="text-muted">${formatDate(komentar.datum_vnosa)}</small>
+                </div>
+                <p class="mb-0">${escapeHtml(komentar.besedilo)}</p>
+            `;
+            
+            komentarjiContainer.appendChild(komentarElement);
+        }
+        
+        // Funkcija za posodabljanje števca komentarjev
+        function updateCommentCount(nalogoId) {
+            const nalogoElement = document.getElementById('naloga-' + nalogoId);
+            if (!nalogoElement) return;
+            
+            const commentCountElement = nalogoElement.querySelector('small.text-muted');
+            if (commentCountElement) {
+                const currentText = commentCountElement.textContent;
+                const match = currentText.match(/(\d+) komentarjev/);
+                if (match) {
+                    const newCount = parseInt(match[1]) + 1;
+                    commentCountElement.innerHTML = commentCountElement.innerHTML.replace(
+                        /\d+ komentarjev/,
+                        newCount + ' komentarjev'
+                    );
+                }
+            }
+        }
+        
+        // Helper funkcija za escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
