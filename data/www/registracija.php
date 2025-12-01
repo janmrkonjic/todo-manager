@@ -42,6 +42,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ");
                 $stmt->execute([$uporabnisko_ime, $email, $geslo_hash]);
                 
+                // Pošlji email dobrodošlice
+                require_once 'config/email.php';
+                $zadeva = "Dobrodošli v Todo Manager!";
+                $sporocilo = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+                        h1 { color: #2c3e50; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>👋 Dobrodošli, $uporabnisko_ime!</h1>
+                        <p>Hvala za registracijo v aplikacijo <strong>Todo Manager</strong>.</p>
+                        <p>Zdaj lahko začnete z ustvarjanjem nalog in organizacijo svojega dela.</p>
+                        <p>Srečno!</p>
+                    </div>
+                </body>
+                </html>
+                ";
+                poslji_email($email, $zadeva, $sporocilo);
+
                 $uspeh = "Registracija uspešna! Sedaj se lahko prijavite.";
             }
         }

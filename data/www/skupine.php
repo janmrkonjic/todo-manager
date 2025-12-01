@@ -31,6 +31,38 @@ try {
             $stmt = $pdo->prepare("INSERT INTO ClaniSkupine (uporabnik_id, skupina_id, datum_prikljucitve) VALUES (?, ?, NOW())");
             $stmt->execute([$uporabnik_id, $skupina_id]);
             
+            // Pošlji email ob ustvarjanju skupine
+            require_once 'config/email.php';
+            $stmt = $pdo->prepare("SELECT email, uporabnisko_ime FROM Uporabnik WHERE id = ?");
+            $stmt->execute([$uporabnik_id]);
+            $user = $stmt->fetch();
+            
+            if ($user) {
+                $zadeva = "Nova skupina ustvarjena: $ime_skupine";
+                $sporocilo = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+                        h1 { color: #2c3e50; }
+                        .group-badge { display: inline-block; padding: 5px 10px; border-radius: 15px; color: white; background-color: $barva; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>👥 Nova skupina ustvarjena</h1>
+                        <p>Pozdravljeni <strong>{$user['uporabnisko_ime']}</strong>,</p>
+                        <p>Uspešno ste ustvarili novo skupino:</p>
+                        <h2 class='group-badge'>$ime_skupine</h2>
+                        <p>Zdaj lahko v skupino povabite druge člane in začnete z delom.</p>
+                    </div>
+                </body>
+                </html>
+                ";
+                poslji_email($user['email'], $zadeva, $sporocilo);
+            }
+
             $_SESSION['success_message'] = "Skupina '$ime_skupine' je bila uspešno ustvarjena!";
             header("Location: skupine.php");
             exit;

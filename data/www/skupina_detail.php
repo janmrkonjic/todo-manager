@@ -1,6 +1,9 @@
 <?php
 session_start();
+
 require_once 'preveri_prijavo.php';
+require_once 'config/email.php';
+
 preveri_prijavo();
 
 try {
@@ -67,6 +70,39 @@ try {
         if (!$stmt->fetch()) {
             $stmt = $pdo->prepare("INSERT INTO ClaniSkupine (uporabnik_id, skupina_id, datum_prikljucitve) VALUES (?, ?, NOW())");
             $stmt->execute([$novi_clan_id, $skupina_id]);
+            
+            // Pošlji email novemu članu
+            require_once 'config/email.php';
+            $stmt = $pdo->prepare("SELECT email, uporabnisko_ime FROM Uporabnik WHERE id = ?");
+            $stmt->execute([$novi_clan_id]);
+            $novi_clan = $stmt->fetch();
+            
+            if ($novi_clan) {
+                $zadeva = "Dodani ste v skupino: {$skupina['ime']}";
+                $sporocilo = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+                        h1 { color: #2c3e50; }
+                        .group-badge { display: inline-block; padding: 5px 10px; border-radius: 15px; color: white; background-color: {$skupina['barva']}; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>👋 Pozdravljeni, {$novi_clan['uporabnisko_ime']}!</h1>
+                        <p>Obveščamo vas, da ste bili dodani v novo skupino:</p>
+                        <h2 class='group-badge'>{$skupina['ime']}</h2>
+                        <p>Vodja skupine: <strong>{$skupina['vodja_ime']}</strong></p>
+                        <p>Zdaj lahko sodelujete pri nalogah te skupine.</p>
+                    </div>
+                </body>
+                </html>
+                ";
+                poslji_email($novi_clan['email'], $zadeva, $sporocilo);
+            }
+
             $_SESSION['success_message'] = "Član je bil uspešno dodan v skupino!";
         } else {
             $_SESSION['error_message'] = "Ta uporabnik je že član skupine!";
@@ -110,6 +146,82 @@ try {
             // Dodeli nalogo skupini
             $stmt = $pdo->prepare("INSERT INTO DodelitevNaloge (datum_dodelitve, naloga_id, uporabnik_id, skupina_id) VALUES (NOW(), ?, NULL, ?)");
             $stmt->execute([$naloga_id, $skupina_id]);
+                        
+            // Email vodji (ki je ustvaril nalogo)
+            $stmt = $pdo->prepare("SELECT email, uporabnisko_ime FROM Uporabnik WHERE id = ?");
+            $stmt->execute([$uporabnik_id]);
+            $vodja = $stmt->fetch();
+            
+            if ($vodja) {
+                $zadeva = "Nova skupinska naloga: $naslov";
+                $sporocilo = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+                        h1 { color: #2c3e50; }
+                        .task-info { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                        .group-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; color: white; background-color: {$skupina['barva']}; font-size: 0.8em; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>✅ Nova skupinska naloga</h1>
+                        <p>Pozdravljeni <strong>{$vodja['uporabnisko_ime']}</strong>,</p>
+                        <p>Uspešno ste ustvarili novo nalogo v skupini <span class='group-badge'>{$skupina['ime']}</span>:</p>
+                        <div class='task-info'>
+                            <h3>$naslov</h3>
+                            <p>$opis</p>
+                            <p><strong>📅 Rok:</strong> " . date('d.m.Y H:i', strtotime($rok)) . "</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                ";
+                poslji_email($vodja['email'], $zadeva, $sporocilo);
+            }
+
+            // Pošlji email vsem članom skupine (razen vodji)
+            $stmt = $pdo->prepare("
+                SELECT u.email, u.uporabnisko_ime 
+                FROM ClaniSkupine cs
+                JOIN Uporabnik u ON cs.uporabnik_id = u.id
+                WHERE cs.skupina_id = ? AND u.id != ?
+            ");
+            $stmt->execute([$skupina_id, $uporabnik_id]);
+            $clani = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($clani as $clan) {
+                $zadeva = "Nova naloga v skupini: {$skupina['ime']}";
+                $sporocilo = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+                        h1 { color: #2c3e50; }
+                        .task-info { background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                        .group-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; color: white; background-color: {$skupina['barva']}; font-size: 0.8em; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>📋 Nova naloga v skupini</h1>
+                        <p>Pozdravljeni <strong>{$clan['uporabnisko_ime']}</strong>,</p>
+                        <p>V skupini <span class='group-badge'>{$skupina['ime']}</span> je bila dodana nova naloga:</p>
+                        <div class='task-info'>
+                            <h3>$naslov</h3>
+                            <p>$opis</p>
+                            <p><strong>📅 Rok:</strong> " . date('d.m.Y H:i', strtotime($rok)) . "</p>
+                        </div>
+                        <p>Prosimo, preverite nalogo v aplikaciji.</p>
+                    </div>
+                </body>
+                </html>
+                ";
+                poslji_email($clan['email'], $zadeva, $sporocilo);
+            }
             
             $_SESSION['success_message'] = "Naloga je bila uspešno dodana skupini!";
             header("Location: skupina_detail.php?id=" . $skupina_id);

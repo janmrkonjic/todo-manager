@@ -30,3 +30,16 @@ services:
       - "127.0.0.1:8001:80" # Poveže notranja vrata 80 na zunanja 8001, kar omogoča dostop do phpMyAdmin preko brskalnika na http://localhost:8001 (vrata na levi strani dvopičja lahko poljubno spremenimo), prijavite pa se z uporabniškim imenom "root" ter geslom, ki je nastavljeno zraven MYSQL_ROOT_PASSWORD . Predpona "127.0.0.1" spletni strežnik zaščiti, da se nanj ni možno povezati iz kakšne druge naprave na omrežju, na katerega je računalnik priklopljen
     environment:
       PMA_HOST: podatkovna-baza  # Ime MySQL zabojnika, na katerega se phpMyAdmin poveže. To je ime MySQL zabojnika ('mysql-pb'), ki ga uporablja Docker za omrežno povezovanje med zabojniki.
+
+  inbucket:
+    image: inbucket/inbucket:latest
+    container_name: inbucket
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9000:9000"   # Web UI → http://localhost:9000
+      - "2500:2500"            # SMTP server → Nastavi v aplikaciji
+      - "1100:1100"            # POP3 (če potrebuješ)
+    environment:
+      INBUCKET_WEB_ADDR: "0.0.0.0:9000"
+      INBUCKET_SMTP_ADDR: "0.0.0.0:2500"
+      INBUCKET_POP3_ADDR: "0.0.0.0:1100"
