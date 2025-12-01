@@ -24,7 +24,7 @@ try {
         exit;
     }
     
-    // Za navbar - enako ime spremenljivke kot na drugih straneh
+    // Slika uporabnika v navbaru
     $uporabnik_slika = $uporabnik['profilna_slika'];
 } catch (PDOException $e) {
     die('Napaka pri povezavi z bazo: ' . htmlspecialchars($e->getMessage()));
@@ -119,7 +119,7 @@ $pageTitle = 'Moj profil';
     </style>
 </head>
 <body>
-    <!-- Navigacija -->
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="index.php">

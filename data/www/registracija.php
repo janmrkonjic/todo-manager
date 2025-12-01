@@ -1,4 +1,5 @@
 <?php
+require_once 'config/email.php';
 $napaka = '';
 $uspeh = '';
 
@@ -43,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$uporabnisko_ime, $email, $geslo_hash]);
                 
                 // Pošlji email dobrodošlice
-                require_once 'config/email.php';
                 $zadeva = "Dobrodošli v Todo Manager!";
                 $sporocilo = "
                 <html>

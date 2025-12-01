@@ -1,7 +1,4 @@
 <?php
-// Middleware za preverjanje prijave uporabnika
-// Vključi to datoteko na začetku vsake zaščitene strani
-// POMEMBNO: session_start() mora biti klican PRED vključitvijo te datoteke!
 
 function preveri_prijavo() {
     if (!isset($_SESSION['uporabnik_id'])) {

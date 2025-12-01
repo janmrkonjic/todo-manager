@@ -37,8 +37,8 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:9000:9000"   # Web UI → http://localhost:9000
-      - "2500:2500"            # SMTP server → Nastavi v aplikaciji
-      - "1100:1100"            # POP3 (če potrebuješ)
+      - "2500:2500"            # SMTP server
+      - "1100:1100"            # POP3
     environment:
       INBUCKET_WEB_ADDR: "0.0.0.0:9000"
       INBUCKET_SMTP_ADDR: "0.0.0.0:2500"
