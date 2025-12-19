@@ -59,6 +59,19 @@ try {
     
     $je_vodja = ($skupina['vodja_id'] == $uporabnik_id);
     
+    // Generiraj povezavo za pridružitev (za QR kodo)
+    $secret_salt = 'skrivni_kljuc_za_povabila_' . $skupina_id;
+    $invite_hash = md5($skupina_id . $secret_salt);
+    
+    // Ugotovi base URL
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+    $host = $_SERVER['HTTP_HOST'];
+    $path = dirname($_SERVER['PHP_SELF']);
+    // Odstrani morebitne backslashe na koncu poti (Windows)
+    $path = rtrim(str_replace('\\', '/', $path), '/');
+    
+    $invite_url = "$protocol://$host$path/pridruzi_skupini.php?id=$skupina_id&hash=$invite_hash";
+
     // Dodajanje člana v skupino (samo vodja)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dodaj_clana']) && $je_vodja) {
         $novi_clan_id = (int)$_POST['uporabnik_id'];
@@ -416,9 +429,14 @@ try {
                     <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><i class="bi bi-people"></i> Člani skupine</h5>
                         <?php if ($je_vodja): ?>
-                        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#dodajClanaModal">
-                            <i class="bi bi-plus"></i>
-                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-light" onclick="generateInvitePDF()" title="Ustvari QR kodo za vabilo">
+                                <i class="bi bi-qr-code"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#dodajClanaModal" title="Dodaj člana ročno">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
                         <?php endif; ?>
                     </div>
                     <div class="card-body">
@@ -900,5 +918,59 @@ try {
         <?php endif; ?>
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- QR Code and PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+    function generateInvitePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        const inviteUrl = "<?php echo $invite_url; ?>";
+        const groupName = "<?php echo addslashes($skupina['ime']); ?>";
+        
+        // Generate QR Code in a hidden div
+        const qrDiv = document.createElement('div');
+        new QRCode(qrDiv, {
+            text: inviteUrl,
+            width: 200,
+            height: 200,
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        // Wait a bit for QR code to render
+        setTimeout(() => {
+            const qrImage = qrDiv.querySelector('img');
+            if (qrImage) {
+                const qrDataUrl = qrImage.src;
+                
+                // Add content to PDF
+                doc.setFontSize(22);
+                doc.text("Vabilo v skupino", 105, 20, null, null, "center");
+                
+                doc.setFontSize(30);
+                doc.setTextColor(0, 123, 255); // Blue
+                doc.text(groupName, 105, 40, null, null, "center");
+                
+                doc.addImage(qrDataUrl, 'PNG', 55, 60, 100, 100);
+                
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text("Skeniraj QR kodo za pridružitev", 105, 170, null, null, "center");
+                
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                // Split long URL if needed
+                const splitUrl = doc.splitTextToSize(inviteUrl, 180);
+                doc.text(splitUrl, 105, 180, null, null, "center");
+                
+                doc.save("vabilo_" + groupName.replace(/[^a-z0-9]/gi, '_').toLowerCase() + ".pdf");
+            } else {
+                alert("Napaka pri generiranju QR kode.");
+            }
+        }, 500);
+    }
+    </script>
 </body>
 </html>

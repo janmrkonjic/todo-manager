@@ -41,6 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['vloga_id'] = $uporabnik['vloga_id'];
                 $_SESSION['vloga_naziv'] = $uporabnik['vloga_naziv'];
                 
+                // Preveri za pending join
+                if (isset($_SESSION['pending_join_group'])) {
+                    $pending = $_SESSION['pending_join_group'];
+                    unset($_SESSION['pending_join_group']);
+                    header("Location: pridruzi_skupini.php?id=" . $pending['id'] . "&hash=" . $pending['hash']);
+                    exit;
+                }
+
                 // Preusmeri glede na vlogo
                 if ($uporabnik['vloga_id'] == 1) {
                     // Administrator gre na administracijo
