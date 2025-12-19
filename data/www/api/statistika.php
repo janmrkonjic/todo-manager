@@ -48,6 +48,7 @@ try {
         FROM Naloga n
         LEFT JOIN DodelitevNaloge dn ON n.id = dn.naloga_id
         GROUP BY tip
+        HAVING tip != 'Nedoločeno'
     ");
     $statistika['nalog_po_tipu'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

@@ -363,7 +363,7 @@ try {
                     labels: data.map(item => item.status),
                     datasets: [{
                         data: data.map(item => item.stevilo),
-                        backgroundColor: ['#28a745', '#ffc107'],
+                        backgroundColor: data.map(item => item.status === 'opravljeno' ? '#28a745' : '#dc3545'),
                         borderWidth: 2,
                         borderColor: '#fff'
                     }]
