@@ -1,14 +1,11 @@
 <?php
 session_start();
-require_once 'preveri_prijavo.php';
+require_once 'includes/functions.php';
 preveri_prijavo();
 
 // Pridobitev podatkov uporabnika iz baze
 try {
-    $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-    $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ]);
+    require_once 'config/db.php';
 
     $stmt = $pdo->prepare('
         SELECT u.id, u.uporabnisko_ime, u.email, u.datum_registracije, u.profilna_slika, v.naziv as vloga
@@ -31,17 +28,10 @@ try {
 }
 
 $pageTitle = 'Moj profil';
+$activePage = 'profil.php';
+include 'includes/header.php';
+include 'includes/navbar.php';
 ?>
-<!DOCTYPE html>
-<html lang="sl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?> - Todo Manager</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <script src="lazy-loader.js" defer></script>
     <style>
         .profile-container {
             max-width: 800px;
@@ -117,84 +107,6 @@ $pageTitle = 'Moj profil';
             padding: 0.375rem 0.75rem;
         }
     </style>
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="index.php">
-                <i class="bi bi-check2-circle"></i> Todo Manager
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <?php if ($_SESSION['vloga_id'] == 1): ?>
-                        <!-- Administrator menu -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="administracija.php">
-                                <i class="bi bi-gear"></i> Administracija
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="uporabniki.php">
-                                <i class="bi bi-people"></i> Uporabniki
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="statistika.php">
-                                <i class="bi bi-bar-chart-line"></i> Statistika
-                            </a>
-                        </li>
-                    <?php else: ?>
-                        <!-- Regular user menu -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php">
-                                <i class="bi bi-house-door"></i> Domov
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="opravljene.php">
-                                <i class="bi bi-check-circle"></i> Opravljene naloge
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="skupine.php">
-                                <i class="bi bi-people"></i> Moje skupine
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active d-flex align-items-center" href="profil.php">
-                            <?php if ($uporabnik_slika && file_exists('uploads/profilne/' . $uporabnik_slika)): ?>
-                                <img src="uploads/profilne/<?= htmlspecialchars($uporabnik_slika) ?>" 
-                                     alt="Profil" 
-                                     class="rounded-circle me-2" 
-                                     style="width: 32px; height: 32px; object-fit: cover;"
-                                     data-lazy="true"
-                                     loading="lazy">
-                            <?php else: ?>
-                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
-                            <?php endif; ?>
-                            <?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
-                            <?php if ($_SESSION['vloga_id'] == 1): ?>
-                                <span class="badge bg-light text-primary ms-2"><?= htmlspecialchars($_SESSION['vloga_naziv']) ?></span>
-                            <?php endif; ?>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="odjava.php">
-                            <i class="bi bi-box-arrow-right"></i> Odjava
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
     <div class="profile-container">
         <h1 class="text-center mb-4"><i class="bi bi-person-circle"></i> Moj profil</h1>
 
@@ -355,6 +267,4 @@ $pageTitle = 'Moj profil';
         }
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>

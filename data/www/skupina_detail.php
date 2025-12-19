@@ -1,23 +1,17 @@
 <?php
 session_start();
 
-require_once 'preveri_prijavo.php';
+require_once 'includes/functions.php';
 require_once 'config/email.php';
 
 preveri_prijavo();
 
 try {
-    $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-    $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ]);
+    require_once 'config/db.php';
     
     $uporabnik_id = $_SESSION['uporabnik_id'];
     
-    // Pridobi profilno sliko uporabnika
-    $stmt = $pdo->prepare('SELECT profilna_slika FROM Uporabnik WHERE id = :id');
-    $stmt->execute(['id' => $uporabnik_id]);
-    $uporabnik_slika = $stmt->fetchColumn();
+    $uporabnik_slika = get_user_profile_image($pdo, $uporabnik_id);
     
     // Preveri, če je ID skupine podan
     if (!isset($_GET['id'])) {
@@ -44,14 +38,7 @@ try {
     }
     
     // Preveri, če je uporabnik član ali vodja skupine
-    $stmt = $pdo->prepare("
-        SELECT * FROM ClaniSkupine 
-        WHERE skupina_id = ? AND uporabnik_id = ?
-    ");
-    $stmt->execute([$skupina_id, $uporabnik_id]);
-    $je_clan = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$je_clan) {
+    if (!je_clan_skupine_db($pdo, $skupina_id, $uporabnik_id)) {
         $_SESSION['error_message'] = "Nimate dostopa do te skupine!";
         header("Location: skupine.php");
         exit;
@@ -77,10 +64,7 @@ try {
         $novi_clan_id = (int)$_POST['uporabnik_id'];
         
         // Preveri, če uporabnik že je član
-        $stmt = $pdo->prepare("SELECT * FROM ClaniSkupine WHERE skupina_id = ? AND uporabnik_id = ?");
-        $stmt->execute([$skupina_id, $novi_clan_id]);
-        
-        if (!$stmt->fetch()) {
+        if (!je_clan_skupine_db($pdo, $skupina_id, $novi_clan_id)) {
             $stmt = $pdo->prepare("INSERT INTO ClaniSkupine (uporabnik_id, skupina_id, datum_prikljucitve) VALUES (?, ?, NOW())");
             $stmt->execute([$novi_clan_id, $skupina_id]);
             
@@ -345,65 +329,11 @@ try {
     http_response_code(500);
     die("DB napaka: " . htmlspecialchars($e->getMessage()));
 }
+$pageTitle = htmlspecialchars($skupina['ime']) . ' - Todo Manager';
+$activePage = 'skupine.php';
+include 'includes/header.php';
+include 'includes/navbar.php';
 ?>
-<!DOCTYPE html>
-<html lang="sl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($skupina['ime']); ?> - Todo Manager</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
-    <script src="lazy-loader.js" defer></script>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="index.php">
-                <i class="bi bi-check2-circle"></i> Todo Manager
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">
-                            <i class="bi bi-house-door"></i> Domov
-                        </a>
-                    </li>
-                    <?php if ($_SESSION['vloga_id'] != 1): ?>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="skupine.php">
-                            <i class="bi bi-people"></i> Moje skupine
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <?php if ($uporabnik_slika && file_exists('uploads/profilne/' . $uporabnik_slika)): ?>
-                                <img src="uploads/profilne/<?= htmlspecialchars($uporabnik_slika) ?>" 
-                                     alt="Profil" 
-                                     class="rounded-circle me-2" 
-                                     style="width: 32px; height: 32px; object-fit: cover;">
-                            <?php else: ?>
-                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
-                            <?php endif; ?>
-                            <?php echo htmlspecialchars($_SESSION['uporabnisko_ime']); ?>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="profil.php"><i class="bi bi-person-circle"></i> Profil</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="odjava.php"><i class="bi bi-box-arrow-right"></i> Odjava</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
     <div class="container mt-4">
 
@@ -917,7 +847,6 @@ try {
             <?php unset($_SESSION['error_message']); ?>
         <?php endif; ?>
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- QR Code and PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -972,5 +901,4 @@ try {
         }, 500);
     }
     </script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>

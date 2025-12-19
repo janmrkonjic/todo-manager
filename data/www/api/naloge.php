@@ -2,20 +2,12 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
-require_once '../preveri_prijavo.php';
+require_once '../includes/functions.php';
 
-// Preveri prijavo - če ni prijavljen, vrne 401
-if (!isset($_SESSION['uporabnik_id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Niste prijavljeni.']);
-    exit;
-}
+api_check_auth();
 
 try {
-    $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-    $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ]);
+    require_once '../config/db.php';
     
     $method = $_SERVER['REQUEST_METHOD'];
     $uporabnik_id = $_SESSION['uporabnik_id'];
@@ -46,11 +38,7 @@ try {
             
             // Če je skupinska naloga, preveri, če je uporabnik vodja
             if ($skupina_id !== null) {
-                $stmt = $pdo->prepare("SELECT vodja_id FROM Skupina WHERE id = ?");
-                $stmt->execute([$skupina_id]);
-                $skupina = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if (!$skupina || $skupina['vodja_id'] != $uporabnik_id) {
+                if (!je_vodja_skupine_db($pdo, $skupina_id, $uporabnik_id)) {
                     http_response_code(403);
                     echo json_encode(['success' => false, 'message' => 'Nimate pravice dodajati naloge v to skupino.']);
                     exit;
@@ -108,16 +96,7 @@ try {
             }
             
             // Preveri, če ima uporabnik dostop do naloge
-            $stmt = $pdo->prepare("
-                SELECT n.* FROM Naloga n
-                INNER JOIN DodelitevNaloge dn ON n.id = dn.naloga_id
-                LEFT JOIN ClaniSkupine cs ON dn.skupina_id = cs.skupina_id
-                WHERE n.id = ? AND (dn.uporabnik_id = ? OR cs.uporabnik_id = ?)
-            ");
-            $stmt->execute([$naloga_id, $uporabnik_id, $uporabnik_id]);
-            $naloga = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$naloga) {
+            if (!ima_dostop_do_naloge($pdo, $naloga_id, $uporabnik_id)) {
                 http_response_code(403);
                 echo json_encode(['success' => false, 'message' => 'Nimate dostopa do te naloge.']);
                 exit;

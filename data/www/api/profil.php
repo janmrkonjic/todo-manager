@@ -2,19 +2,11 @@
 session_start();
 header('Content-Type: application/json');
 
-// Preveri, ali je uporabnik prijavljen
-if (!isset($_SESSION['uporabnik_id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Niste prijavljeni.']);
-    exit;
-}
+api_check_auth();
 
 // Povezava z bazo
 try {
-    $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-    $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ]);
+    require_once '../config/db.php';
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Napaka pri povezavi z bazo.']);

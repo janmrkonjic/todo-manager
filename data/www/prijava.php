@@ -11,10 +11,7 @@ $napaka = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-        $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
+        require_once 'config/db.php';
         
         $email = trim($_POST['email']);
         $geslo = $_POST['geslo'];
@@ -67,17 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $napaka = "Napaka pri prijavi: " . $e->getMessage();
     }
 }
+$pageTitle = 'Prijava - Todo Manager';
+$bodyClass = 'bg-light';
+include 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="sl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prijava - Todo Manager</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
-</head>
-<body class="bg-light">
     <div class="container">
         <div class="row justify-content-center mt-5">
             <div class="col-md-5">
@@ -122,6 +112,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>

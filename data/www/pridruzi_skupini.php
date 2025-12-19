@@ -3,18 +3,7 @@ session_start();
 require_once 'config/email.php'; // Za vsak slučaj, če bomo rabili
 
 // Konfiguracija baze
-$dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-$db_user = 'root';
-$db_pass = 'superVarnoGeslo';
-
-try {
-    $pdo = new PDO($dsn, $db_user, $db_pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
-} catch (PDOException $e) {
-    die("Napaka pri povezavi z bazo: " . $e->getMessage());
-}
+require_once 'config/db.php';
 
 // Preveri parametre
 if (!isset($_GET['id']) || !isset($_GET['hash'])) {

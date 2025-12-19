@@ -4,25 +4,21 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
 session_start();
-require_once '../preveri_prijavo.php';
+require_once '../includes/functions.php';
 
 header('Content-Type: application/json');
 
-// Preverjanje, da je uporabnik prijavljen in ima administratorske pravice
-try {
-    preveri_prijavo();
-    preveri_vlogo([1]);
-} catch (Exception $e) {
+api_check_auth();
+
+// Preverjanje, da ima uporabnik administratorske pravice
+if (!isset($_SESSION['vloga_id']) || $_SESSION['vloga_id'] != 1) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Dostop zavrnjen', 'error' => $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Nimate dostopa do te strani.']);
     exit;
 }
 
 try {
-    $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-    $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ]);
+    require_once '../config/db.php';
 
     $statistika = [];
 

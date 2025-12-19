@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'preveri_prijavo.php';
+require_once 'includes/functions.php';
 
 // Preveri, če je uporabnik prijavljen in ima vlogo administratorja
 preveri_prijavo();
@@ -8,15 +8,9 @@ preveri_vlogo([1]); // Samo administrator
 
 // Poveži se z bazo
 try {
-    $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-    $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ]);
+    require_once 'config/db.php';
     
-    // Pridobi profilno sliko uporabnika
-    $stmt = $pdo->prepare('SELECT profilna_slika FROM Uporabnik WHERE id = :id');
-    $stmt->execute(['id' => $_SESSION['uporabnik_id']]);
-    $uporabnik_slika = $stmt->fetchColumn();
+    $uporabnik_slika = get_user_profile_image($pdo, $_SESSION['uporabnik_id']);
 } catch(PDOException $e) {
     die("Napaka pri povezavi z bazo: " . $e->getMessage());
 }
@@ -70,71 +64,11 @@ $uporabniki = $stmt->fetchAll();
 // Pridobi vse vloge za dropdown
 $stmt = $pdo->query("SELECT id, naziv FROM Vloga ORDER BY id");
 $vloge = $stmt->fetchAll();
+$pageTitle = 'Upravljanje uporabnikov - Todo Manager';
+$activePage = 'uporabniki.php';
+include 'includes/header.php';
+include 'includes/navbar.php';
 ?>
-
-<!DOCTYPE html>
-<html lang="sl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upravljanje uporabnikov - Todo Manager</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="lazy-loader.js" defer></script>
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="index.php">
-                <i class="bi bi-check2-circle"></i> Todo Manager
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="administracija.php">
-                            <i class="bi bi-gear"></i> Administracija
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="uporabniki.php">
-                            <i class="bi bi-people"></i> Uporabniki
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="statistika.php">
-                            <i class="bi bi-bar-chart-line"></i> Statistika
-                        </a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" href="profil.php">
-                            <?php if ($uporabnik_slika && file_exists('uploads/profilne/' . $uporabnik_slika)): ?>
-                                <img src="uploads/profilne/<?= htmlspecialchars($uporabnik_slika) ?>" 
-                                     alt="Profil" 
-                                     class="rounded-circle me-2" 
-                                     style="width: 32px; height: 32px; object-fit: cover;">
-                            <?php else: ?>
-                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
-                            <?php endif; ?>
-                            <?php echo htmlspecialchars($_SESSION['uporabnisko_ime']); ?>
-                            <span class="badge bg-light text-primary ms-2"><?php echo htmlspecialchars($_SESSION['vloga_naziv']); ?></span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="odjava.php">
-                            <i class="bi bi-box-arrow-right"></i> Odjava
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
     <div class="container mt-4">
         <div class="row">
@@ -266,7 +200,6 @@ $vloge = $stmt->fetchAll();
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="api.js"></script>
     <script>
         // Funkcija za brisanje uporabnika
@@ -307,5 +240,4 @@ $vloge = $stmt->fetchAll();
             <?php unset($_SESSION['error_message']); ?>
         <?php endif; ?>
     </script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>

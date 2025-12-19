@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'preveri_prijavo.php';
+require_once 'includes/functions.php';
 
 // Onemogočimo prikazovanje napak, da ne pokvarijo CSV izhoda
 ini_set('display_errors', 0);
@@ -10,10 +10,7 @@ preveri_prijavo();
 preveri_vlogo([1]);
 
 try {
-    $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-    $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ]);
+    require_once 'config/db.php';
 
     // Poizvedba za statistiko uporabnikov
     $stmt = $pdo->query("

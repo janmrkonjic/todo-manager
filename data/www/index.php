@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'preveri_prijavo.php';
+require_once 'includes/functions.php';
 preveri_prijavo();
 
 $searchTerm = trim($_GET['search'] ?? '');
@@ -40,15 +40,9 @@ $filterQueryAppend = $filterQueryString ? '&' . $filterQueryString : '';
 $advancedFiltersOpen = $filterTip !== 'vse' || $rokOd !== '' || $rokDo !== '';
 
 try {
-    $dsn = 'mysql:host=mysql;port=3306;dbname=todo_manager;charset=utf8mb4';
-    $pdo = new PDO($dsn, 'root', 'superVarnoGeslo', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ]);
+    require_once 'config/db.php';
     
-    // Pridobi profilno sliko uporabnika
-    $stmt = $pdo->prepare('SELECT profilna_slika FROM Uporabnik WHERE id = :id');
-    $stmt->execute(['id' => $_SESSION['uporabnik_id']]);
-    $uporabnik_slika = $stmt->fetchColumn();
+    $uporabnik_slika = get_user_profile_image($pdo, $_SESSION['uporabnik_id']);
     
         $filterSql = '';
         $filterParams = [];
@@ -214,73 +208,12 @@ try {
     http_response_code(500);
     die("DB napaka: " . htmlspecialchars($e->getMessage()));
 }
+
+$pageTitle = 'Domov - Todo Manager';
+$activePage = 'index.php';
+include 'includes/header.php';
+include 'includes/navbar.php';
 ?>
-<!DOCTYPE html>
-<html lang="sl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domov - Todo Manager</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
-    <script src="storage.js"></script>
-    <script src="lazy-loader.js" defer></script>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="index.php">
-                <i class="bi bi-check2-circle"></i> Todo Manager
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="index.php">
-                            <i class="bi bi-house-door"></i> Domov
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="opravljene.php">
-                            <i class="bi bi-check-circle"></i> Opravljene naloge
-                        </a>
-                    </li>
-                    <?php if ($_SESSION['vloga_id'] != 1): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="skupine.php">
-                            <i class="bi bi-people"></i> Moje skupine
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center" href="profil.php">
-                            <?php if ($uporabnik_slika && file_exists('uploads/profilne/' . $uporabnik_slika)): ?>
-                                <img src="uploads/profilne/<?= htmlspecialchars($uporabnik_slika) ?>" 
-                                     alt="Profil" 
-                                     class="rounded-circle me-2" 
-                                     style="width: 32px; height: 32px; object-fit: cover;"
-                                     data-lazy="true"
-                                     loading="lazy">
-                            <?php else: ?>
-                                <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
-                            <?php endif; ?>
-                            <?= htmlspecialchars($_SESSION['uporabnisko_ime']) ?>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="odjava.php">
-                            <i class="bi bi-box-arrow-right"></i> Odjava
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
     <div class="task-container">
         <form method="GET" class="task-filter-form" id="taskFilterForm">
@@ -1117,6 +1050,4 @@ try {
         <?php endif; ?>
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>
