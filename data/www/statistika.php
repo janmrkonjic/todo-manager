@@ -109,7 +109,12 @@ try {
     </nav>
 
     <div class="container-fluid mt-4">
-        <h1 class="mb-4"><i class="bi bi-bar-chart-line"></i> Statistika in analitika</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-bar-chart-line"></i> Statistika in analitika</h1>
+            <a href="izvoz_statistike.php" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Izvozi v Excel
+            </a>
+        </div>
 
         <div id="loadingSpinner" class="loading-spinner">
             <div class="spinner-border text-primary" role="status">

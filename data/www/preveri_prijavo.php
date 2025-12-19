@@ -12,7 +12,7 @@ function preveri_prijavo() {
         $current_dir = basename(dirname($_SERVER['PHP_SELF']));
         
         // Ne preusmerjaj, če je uporabnik na dovoljenih straneh ali v API direktoriju
-        $allowed_pages = ['administracija.php', 'uporabniki.php', 'statistika.php', 'profil.php', 'odjava.php'];
+        $allowed_pages = ['administracija.php', 'uporabniki.php', 'statistika.php', 'profil.php', 'odjava.php', 'izvoz_statistike.php'];
         
         if (!in_array($current_page, $allowed_pages) && $current_dir !== 'api') {
             header("Location: administracija.php");
