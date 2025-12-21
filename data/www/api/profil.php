@@ -2,6 +2,8 @@
 session_start();
 header('Content-Type: application/json');
 
+require_once '../includes/functions.php';
+
 api_check_auth();
 
 // Povezava z bazo

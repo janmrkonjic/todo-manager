@@ -12,7 +12,7 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
     $uporabnik_id = $_SESSION['uporabnik_id'];
     
-    // GET - pridobi naloge (lahko bi bilo za lazy loading)
+    // GET - pridobi naloge
     if ($method === 'GET') {
         http_response_code(501);
         echo json_encode(['success' => false, 'message' => 'GET metoda še ni implementirana.']);

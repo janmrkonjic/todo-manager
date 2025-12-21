@@ -41,7 +41,12 @@ if (isset($_SESSION['error_message']) && $_SESSION['error_message'] === "Za prid
 }
 
 // Preveri, če skupina obstaja
-$stmt = $pdo->prepare("SELECT * FROM Skupina WHERE id = ?");
+$stmt = $pdo->prepare("
+    SELECT s.*, u.uporabnisko_ime as vodja_ime 
+    FROM Skupina s 
+    LEFT JOIN Uporabnik u ON s.vodja_id = u.id 
+    WHERE s.id = ?
+");
 $stmt->execute([$skupina_id]);
 $skupina = $stmt->fetch();
 
@@ -63,6 +68,37 @@ if ($stmt->fetch()) {
 // Dodaj uporabnika v skupino
 $stmt = $pdo->prepare("INSERT INTO ClaniSkupine (uporabnik_id, skupina_id, datum_prikljucitve) VALUES (?, ?, NOW())");
 $stmt->execute([$uporabnik_id, $skupina_id]);
+
+// Pošlji email uporabniku
+$stmt = $pdo->prepare("SELECT email, uporabnisko_ime FROM Uporabnik WHERE id = ?");
+$stmt->execute([$uporabnik_id]);
+$uporabnik = $stmt->fetch();
+
+if ($uporabnik) {
+    $zadeva = "Pridružili ste se skupini: {$skupina['ime']}";
+    $sporocilo = "
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+            h1 { color: #2c3e50; }
+            .group-badge { display: inline-block; padding: 5px 10px; border-radius: 15px; color: white; background-color: {$skupina['barva']}; }
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <h1>👋 Pozdravljeni, {$uporabnik['uporabnisko_ime']}!</h1>
+            <p>Uspešno ste se pridružili skupini:</p>
+            <h2 class='group-badge'>{$skupina['ime']}</h2>
+            <p>Vodja skupine: <strong>{$skupina['vodja_ime']}</strong></p>
+            <p>Zdaj lahko sodelujete pri nalogah te skupine.</p>
+        </div>
+    </body>
+    </html>
+    ";
+    poslji_email($uporabnik['email'], $zadeva, $sporocilo);
+}
 
 $_SESSION['success_message'] = "Uspešno ste se pridružili skupini {$skupina['ime']}!";
 header("Location: skupina_detail.php?id=" . $skupina_id);
