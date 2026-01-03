@@ -1,10 +1,10 @@
 <?php
 // Database configuration
-$db_host = 'mysql';
+$db_host = 'sql105.infinityfree.com';
 $db_port = '3306';
-$db_name = 'todo_manager';
-$db_user = 'root';
-$db_pass = 'superVarnoGeslo';
+$db_name = 'if0_40819230_todo_manager';
+$db_user = 'if0_40819230';
+$db_pass = '2yIUkCno1tUFG';
 $db_charset = 'utf8mb4';
 
 try {
