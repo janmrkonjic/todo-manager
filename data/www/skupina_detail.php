@@ -670,8 +670,6 @@ include 'includes/navbar.php';
         document.querySelectorAll('.komentar-form').forEach(form => {
             console.log('Attaching listener to form:', form);
             form.addEventListener('submit', async function(e) {
-                console.log('%c FORM SUBMIT EVENT TRIGGERED!', 'background: red; color: white; font-size: 20px; padding: 10px;');
-                alert('Form submit event triggered! Check console.');
                 e.preventDefault();
                 
                 const formData = new FormData(this);
